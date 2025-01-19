@@ -1,12 +1,12 @@
 import * as vscode from 'vscode';
-import { NavigationItem } from './navigationItem';
+import { Arrival } from './arrival';
 import { NavigationRecorder } from './navigationRecorder';
 import { debugLog } from './debug';
 import { extractSymbols } from './symbolUtil';
 
-export class NavigationHistoryProvider implements vscode.TreeDataProvider<NavigationItem> {
-	private _onDidChangeTreeData: vscode.EventEmitter<NavigationItem | undefined | null | void> = new vscode.EventEmitter<NavigationItem | undefined | null | void>();
-	readonly onDidChangeTreeData?: vscode.Event<void | NavigationItem | NavigationItem[] | null | undefined> | undefined = this._onDidChangeTreeData.event;
+export class NavigationHistoryProvider implements vscode.TreeDataProvider<Arrival> {
+	private _onDidChangeTreeData: vscode.EventEmitter<Arrival | undefined | null | void> = new vscode.EventEmitter<Arrival | undefined | null | void>();
+	readonly onDidChangeTreeData?: vscode.Event<void | Arrival | Arrival[] | null | undefined> | undefined = this._onDidChangeTreeData.event;
 	private recorder: NavigationRecorder = new NavigationRecorder();
 
 	constructor() {
@@ -37,16 +37,15 @@ export class NavigationHistoryProvider implements vscode.TreeDataProvider<Naviga
 			if (!symbol) {
 				return;
 			}
-			
-			debugLog(`On Word: ${word}  On Symbol: ${symbol.name}`, false);
 
-			this.recorder.record({
+			debugLog(`On Word: ${word}  On Symbol: ${symbol.name}`, true);
+
+			const navigationItem = Arrival.createFrom({
 				symbol: symbol,
 				word: word,
-				uri: event.textEditor.document.uri,
-				range: symbol.range,
-				type: symbol.kind,
 			});
+
+			this.recorder.record(navigationItem);
 
 			this._onDidChangeTreeData.fire();
 		});
@@ -54,15 +53,15 @@ export class NavigationHistoryProvider implements vscode.TreeDataProvider<Naviga
 		// TODO: remember to give disposble to context
 	}
 
-	getTreeItem(element: NavigationItem): vscode.TreeItem | Thenable<vscode.TreeItem> {
+	getTreeItem(element: Arrival): vscode.TreeItem | Thenable<vscode.TreeItem> {
 		return element.treeItemAdapter();
 	}
 
-	getRoot(): NavigationItem[] {
+	getRoot(): Arrival[] {
 		return this.recorder.list;
 	}
 
-	getChildren(element?: NavigationItem | undefined): vscode.ProviderResult<NavigationItem[]> {
+	getChildren(element?: Arrival | undefined): vscode.ProviderResult<Arrival[]> {
 		if (!element) {
 			return this.getRoot();
 		}

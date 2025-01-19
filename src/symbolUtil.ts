@@ -1,15 +1,15 @@
 import * as vscode from 'vscode';
 import { TracableSymbol } from './tracableSymbol';
 
-export async function extractSymbols(doc: vscode.TextDocument, position: vscode.Position): Promise<vscode.DocumentSymbol | null> {
-    function findSymbol(symbols: vscode.DocumentSymbol[], position: vscode.Position): vscode.DocumentSymbol | null {
+export async function extractSymbols(doc: vscode.TextDocument, position: vscode.Position): Promise<TracableSymbol | null> {
+    function findSymbol(symbols: TracableSymbol[], position: vscode.Position): TracableSymbol | null {
         for (const symbol of symbols) {
             // symbol might be undefine, thus we must filter these undefine out.
             if (!symbol || !symbol.range.contains(position)) {
                 continue;
             }
 
-            let childSymbol: vscode.DocumentSymbol | null = null;
+            let childSymbol: TracableSymbol | null = null;
             if (symbol.children) {
                 childSymbol = findSymbol(symbol.children, position);
             }
@@ -22,11 +22,11 @@ export async function extractSymbols(doc: vscode.TextDocument, position: vscode.
         return null;
     }
 
-    const symbols = await vscode.commands.executeCommand<vscode.DocumentSymbol[]>(
+    const symbols: vscode.DocumentSymbol[] = await vscode.commands.executeCommand<vscode.DocumentSymbol[]>(
         'vscode.executeDocumentSymbolProvider',
         doc.uri
     );
-    const tracableSymbols = symbols.map(symbol => TracableSymbol.createFrom(symbol));
+    const tracableSymbols: TracableSymbol[] = symbols.map(symbol => TracableSymbol.createFrom(doc.uri, symbol));
 
     return findSymbol(tracableSymbols, position);
 }
