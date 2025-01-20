@@ -33,9 +33,10 @@ export class Arrival implements NavigationIterface {
     }
 
     public treeItemAdapter(): vscode.TreeItem {
-        debugLog(`${this.symbol.name}.collapseState = ${this.collapsibleState}`);
+        debugLog(`${this.symbol.name}.collapseState = ${this.collapsibleState}`, false);
 
-        let treeItem = new vscode.TreeItem(this.symbol.name, this.collapsibleState);
+        const symbolDisplayName = (this.symbol.kind === vscode.SymbolKind.Method) ? `.${this.symbol.name}` : this.symbol.name;
+        let treeItem = new vscode.TreeItem(symbolDisplayName, this.collapsibleState);
 
         switch (this.symbol.kind) {
             case vscode.SymbolKind.Class:
