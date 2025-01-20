@@ -2,35 +2,44 @@ import * as vscode from 'vscode';
 import { debugLog } from './debug';
 import { Arrival } from './arrival';
 import { TracableSymbol } from './tracableSymbol';
+import { ArrivalCollection } from './arrivalCollection';
 
 // This recorder is responsible for recording the navigation history
-export class NavigationRecorder {
-    private navigationHistory: Arrival[] = [];
+export class ArrivalRecorder {
     private latestArrival: Arrival | undefined = undefined;
+    private arrivalCollection: ArrivalCollection;
 
-    get list(): Arrival[] {
-        return this.navigationHistory;
+    constructor(arrivalCollection: ArrivalCollection) {
+        this.arrivalCollection = arrivalCollection;
     }
 
     clear() {
-        this.navigationHistory = [];
+        this.arrivalCollection.clear();
         this.latestArrival = undefined;
     }
 
-    record(arrival: Arrival) {
+    /**
+     * Record the arrival, and return the saved arrival in the arrival collection, which in most cases is the same as the arrival passed in.
+     * But if this arrival is already in the tree, then the returned arrival is the old arrival that has the same symbol.
+     * @param arrival the arrival to record
+     * @returns the arrival saved in the arrival collection
+     */
+    record(arrival: Arrival): Arrival {
         const exitCodeBlock = () => {
             throw new Error("exit the code block");
         };
+        
+        let recordedArrival: Arrival = arrival;
 
         try {
             // when history is empty
-            if (this.navigationHistory.length === 0) {
-                debugLog("ADD A NEW ITEM TREE", true);
-                this.navigationHistory.push(this.createNewArrivalTreeFromLeaf(arrival));
+            if (this.arrivalCollection.isEmpty) {
+                debugLog("ADD A NEW ITEM TREE", false);
+                this.arrivalCollection.push(this.createNewArrivalTreeFromLeaf(arrival));
                 exitCodeBlock();
             }
 
-            const latestRootArrival = this.navigationHistory[this.navigationHistory.length - 1];
+            const latestRootArrival = this.arrivalCollection.at(-1);
 
             function doesArrivalHasSameSymbol(symbol: TracableSymbol, arrival: Arrival) {
                 return arrival.symbol.isEqual(symbol);
@@ -40,15 +49,19 @@ export class NavigationRecorder {
 
             // when move around in range of same symbol I've already arrived
             if (ancestorArrivalInTree && ancestorArrivalInTree.isOnSameSymbolOf(arrival)) {
-                debugLog("NOTHING SHOWS", true);
+                debugLog("NOTHING SHOWS", false);
+                // if there's already in the tree an ancestor arrival that has the same symbol, then we don't add this arrival to the tree.
+                // but the recorded arrival(returned value) should be the ancestor arrival, not the current arrival.
+                // in another word, if we have already seen this symbol of the current arrival, we use the old arrival.
+                recordedArrival = ancestorArrivalInTree;
                 exitCodeBlock();
             }
 
             // when move around in range of same symbol I've alread arrived but land on the unmet sub-symbol
             if (ancestorArrivalInTree) {
-                debugLog("ADD A CHILD FOR LANDING ON SUB-SYMBOL", true);
+                debugLog("ADD A CHILD FOR LANDING ON SUB-SYMBOL", false);
                 const newArrivalTreeRoot: Arrival = this.createNewArrivalTreeFromLeaf(arrival, ancestorArrivalInTree?.symbol);
-                ancestorArrivalInTree.children.push(newArrivalTreeRoot);
+                ancestorArrivalInTree.addChild(newArrivalTreeRoot);
                 exitCodeBlock();
             }
 
@@ -57,11 +70,11 @@ export class NavigationRecorder {
                 && this.latestArrival?.word === arrival.symbol.name
                 && arrival.symbol.parent?.kind !== vscode.SymbolKind.Class) {
 
-                debugLog("ADD A CHILD FOR DRILLING IN", true);
+                debugLog("ADD A CHILD FOR DRILLING IN", false);
                 const latestArrivalInTree = this.findInArrivalTree(this.latestArrival.symbol, latestRootArrival, doesArrivalHasSameSymbol);
                 if (latestArrivalInTree) {
                     latestArrivalInTree.word = this.latestArrival.word;
-                    latestArrivalInTree.children.push(arrival);
+                    latestArrivalInTree.addChild(arrival);
                 }
                 exitCodeBlock();
             }
@@ -77,32 +90,36 @@ export class NavigationRecorder {
 
                 if (latestArrivalInTree) {
                     latestArrivalInTree.word = arrival.word;
-                    debugLog("ADD A CHILD FOR CLASS AND GRANDCHILD FOR SYMBOL", true);
+                    debugLog("ADD A CHILD FOR CLASS AND GRANDCHILD FOR SYMBOL", false);
                     const classSymbolArrivalInTree = this.findInArrivalTree(arrival.symbol.parent, latestRootArrival, doesArrivalHasSameSymbol);
                     // class symbol is already the child of the latest arrival
                     if (classSymbolArrivalInTree) {
-                        classSymbolArrivalInTree.children.push(arrival);
+                        classSymbolArrivalInTree.addChild(arrival);
                         exitCodeBlock();
 
                         // class symbol is not the child of the latest arrival
                     } else {
                         // add class symbol as a child of the latest arrival, bind current arrival as the child of class symbol
-                        const classSymbolArrival = new Arrival(arrival.symbol.parent, arrival.symbol.parent.name, [arrival], latestArrivalInTree);
-                        latestArrivalInTree.children.push(classSymbolArrival);
+                        const classSymbolArrival = new Arrival(arrival.symbol.parent, arrival.symbol.parent.name);
+                        classSymbolArrival.addChild(arrival);
+                        classSymbolArrival.setParent(latestArrivalInTree);
+                        latestArrivalInTree.addChild(classSymbolArrival);
                         exitCodeBlock();
                     }
                 }
             }
 
             // when move around outside the scope of latest arrival, this is the default behavior
-            debugLog("ADD A NEW ITEM TREE", true);
-            this.navigationHistory.push(this.createNewArrivalTreeFromLeaf(arrival));
+            debugLog("ADD A NEW ITEM TREE", false);
+            this.arrivalCollection.push(this.createNewArrivalTreeFromLeaf(arrival));
 
         } catch (exitCodeBlock) {
             // only for exit the above code block
         } finally {
             this.latestArrival = arrival;
         }
+        
+        return recordedArrival;
     }
 
     /**
@@ -116,8 +133,8 @@ export class NavigationRecorder {
             return leaf;
         }
 
-        const parentArrival = new Arrival(leaf.symbol.parent, leaf.symbol.parent.name, [leaf], null);
-        leaf.parent = parentArrival;
+        const parentArrival = new Arrival(leaf.symbol.parent, leaf.symbol.parent.name);
+        parentArrival.addChild(leaf);
         return this.createNewArrivalTreeFromLeaf(parentArrival, stopAt);
     }
 
@@ -132,7 +149,7 @@ export class NavigationRecorder {
         leafTargetSymbol: TracableSymbol | null | undefined,
         root: Arrival,
         predicator: (symbol: TracableSymbol, arrival: Arrival) => boolean): Arrival | undefined {
-            
+
         if (!leafTargetSymbol) {
             return undefined;
         }

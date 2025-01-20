@@ -1,35 +1,59 @@
 import * as vscode from 'vscode';
 import { TracableSymbol } from './tracableSymbol';
 import { debugLog } from './debug';
+import { extractSymbols } from './util';
 
 
-export class Arrival implements NavigationIterface {
+export class Arrival implements ArrivalIterface {
+    public symbol: TracableSymbol;
+    public word: string;
+    public children: Arrival[] = [];
+    public parent: Arrival | undefined | null = null;
+
     constructor(
-        public symbol: TracableSymbol,
-        public word: string,
-        public children: Arrival[] = [],
-        public parent: Arrival | undefined | null = null,
-    ) { }
-        
+        symbol: TracableSymbol,
+        word: string,
+    ) {
+        this.symbol = symbol;
+        this.word = word;
+    }
+
     get collapsibleState(): vscode.TreeItemCollapsibleState {
         return this.children?.length > 0 ? vscode.TreeItemCollapsibleState.Expanded : vscode.TreeItemCollapsibleState.None;
     }
 
-    static createFrom(navigationInfo: NavigationIterface): Arrival {
-        const navigationItem = new Arrival(
-            navigationInfo.symbol,
-            navigationInfo.word,
-            navigationInfo.children?.map(child => Arrival.createFrom(child)));
+    static createFrom(arrivalInfo: ArrivalIterface): Arrival {
+        const arrival = new Arrival(arrivalInfo.symbol, arrivalInfo.word);
 
-        navigationItem.children.forEach(child => {
-            child.parent = navigationItem;
-        });
+        const children = (arrivalInfo.children || []).map(child => Arrival.createFrom(child));
+        children.forEach(child => { child.parent = arrival; });
+        arrival.children = children;
 
-        return navigationItem;
+        return arrival;
     }
 
-    isOnSameSymbolOf(other: NavigationIterface): boolean {
+    isOnSameSymbolOf(other: ArrivalIterface): boolean {
         return this.symbol.isEqual(other.symbol);
+    }
+
+    setParent(parent: Arrival): Arrival {
+        this.parent = parent;
+        if (!parent.children.find(child => child.isOnSameSymbolOf(this))) {
+            parent.addChild(this);
+        }
+
+        return this;
+    }
+
+    addChild(child: Arrival): Arrival {
+        if (this.children.find(child => child.isOnSameSymbolOf(this))) {
+            return this;
+        }
+
+        this.children.push(child);
+        child.parent = this;
+
+        return this;
     }
 
     public treeItemAdapter(): vscode.TreeItem {
@@ -81,9 +105,9 @@ export class Arrival implements NavigationIterface {
     }
 }
 
-export interface NavigationIterface {
+export interface ArrivalIterface {
     symbol: TracableSymbol;
     word: string;
-    children?: NavigationIterface[];
+    children?: ArrivalIterface[];
 }
 
