@@ -1,7 +1,7 @@
 {
   "name": "navigation-history",
-  "displayName": "navigation history",
-  "description": "help you read code more easily by providing navigation history in a nicer way",
+  "displayName": "Navigation History",
+  "description": "Help you read code more easily by providing navigation history in a nicer way",
   "version": "0.0.1",
   "engines": {
     "vscode": "^1.96.0"
@@ -10,7 +10,7 @@
     "Other"
   ],
   "activationEvents": [
-    "*"
+    "onStartupFinished"
   ],
   "main": "./dist/extension.js",
   "contributes": {
@@ -24,10 +24,21 @@
     },
     "commands": [
       {
-        "command": "navigation-history.helloWorld",
-        "title": "Hello World"
+        "command": "navigationHistory.cleanup",
+        "title": "Cleanup",
+        "icon": "$(clear-all)"
       }
-    ]
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "navigationHistory.cleanup",
+          "when": "view == navigationHistory",
+          "group": "navigation",
+          "title": "Cleanup"
+        }
+      ]
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run package",

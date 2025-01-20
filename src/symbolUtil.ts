@@ -4,7 +4,7 @@ import { TracableSymbol } from './tracableSymbol';
 export async function extractSymbols(doc: vscode.TextDocument, position: vscode.Position): Promise<TracableSymbol | null> {
     function findSymbol(symbols: TracableSymbol[], position: vscode.Position): TracableSymbol | null {
         for (const symbol of symbols) {
-            // symbol might be undefine, thus we must filter these undefine out.
+            // symbol might be undefine, thus we must filter out these undefine.
             if (!symbol || !symbol.range.contains(position)) {
                 continue;
             }

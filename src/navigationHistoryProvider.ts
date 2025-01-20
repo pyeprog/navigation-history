@@ -8,13 +8,15 @@ export class NavigationHistoryProvider implements vscode.TreeDataProvider<Arriva
 	private _onDidChangeTreeData: vscode.EventEmitter<Arrival | undefined | null | void> = new vscode.EventEmitter<Arrival | undefined | null | void>();
 	readonly onDidChangeTreeData?: vscode.Event<void | Arrival | Arrival[] | null | undefined> | undefined = this._onDidChangeTreeData.event;
 	private recorder: NavigationRecorder = new NavigationRecorder();
+	private context: vscode.ExtensionContext;
 
-	constructor() {
-		this.registerRecorder(this.recorder);
+	constructor(context: vscode.ExtensionContext) {
+		this.context = context;
+		this.registerNavigationRecorder(this.recorder, this.context);
 	}
 
-	registerRecorder(recorder: NavigationRecorder) {
-		const disposable1 = vscode.window.onDidChangeTextEditorSelection(async event => {
+	registerNavigationRecorder(recorder: NavigationRecorder, context: vscode.ExtensionContext) {
+		const disposable = vscode.window.onDidChangeTextEditorSelection(async event => {
 			if (!event) {
 				return;
 			}
@@ -38,32 +40,37 @@ export class NavigationHistoryProvider implements vscode.TreeDataProvider<Arriva
 				return;
 			}
 
-			debugLog(`On Word: ${word}  On Symbol: ${symbol.name}`, true);
+			debugLog(`On Word: ${word}  On Symbol: ${symbol.name}`, false);
 
-			const navigationItem = Arrival.createFrom({
+			const arrival = Arrival.createFrom({
 				symbol: symbol,
 				word: word,
 			});
 
-			this.recorder.record(navigationItem);
+			recorder.record(arrival);
 
 			this._onDidChangeTreeData.fire();
 		});
 
-		// TODO: remember to give disposble to context
+		context.subscriptions.push(disposable);
+	}
+
+	cleanup() {
+		this.recorder.clear();
+		this._onDidChangeTreeData.fire();
 	}
 
 	getTreeItem(element: Arrival): vscode.TreeItem | Thenable<vscode.TreeItem> {
 		return element.treeItemAdapter();
 	}
 
-	getRoot(): Arrival[] {
+	private getInitialChildren(): Arrival[] {
 		return this.recorder.list;
 	}
 
 	getChildren(element?: Arrival | undefined): vscode.ProviderResult<Arrival[]> {
 		if (!element) {
-			return this.getRoot();
+			return this.getInitialChildren();
 		}
 
 		return element.children;

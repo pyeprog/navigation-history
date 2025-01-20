@@ -16,7 +16,7 @@ export class Arrival implements NavigationIterface {
     }
 
     static createFrom(navigationInfo: NavigationIterface): Arrival {
-        let navigationItem = new Arrival(
+        const navigationItem = new Arrival(
             navigationInfo.symbol,
             navigationInfo.word,
             navigationInfo.children?.map(child => Arrival.createFrom(child)));

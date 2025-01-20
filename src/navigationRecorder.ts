@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { debugLog } from './debug';
-import { Arrival, NavigationIterface } from './arrival';
+import { Arrival } from './arrival';
 import { TracableSymbol } from './tracableSymbol';
 
 // This recorder is responsible for recording the navigation history
@@ -10,6 +10,11 @@ export class NavigationRecorder {
 
     get list(): Arrival[] {
         return this.navigationHistory;
+    }
+
+    clear() {
+        this.navigationHistory = [];
+        this.latestArrival = undefined;
     }
 
     record(arrival: Arrival) {
