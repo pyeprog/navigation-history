@@ -12,6 +12,10 @@ export class TracableSymbol extends vscode.DocumentSymbol {
         this.parent = parent || null;
     }
 
+    get id(): string {
+        return `${this.uri.fsPath}|${this.name}|${this.range.start.line}:${this.range.start.character}-${this.range.end.line}:${this.range.end.character}`;
+    }
+
     isEqual(other: TracableSymbol): boolean {
         return this.name === other.name
             && this.uri.fsPath === other.uri.fsPath
