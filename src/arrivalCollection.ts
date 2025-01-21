@@ -4,7 +4,14 @@ import { Arrival } from "./arrival";
 export class ArrivalCollection {
     private _arrivalList: Array<Arrival> = new Array();
 
-    asList(): Arrival[] {
+    asList(mode: 'pinnedFirst' | 'default' = 'default'): Arrival[] {
+        if (mode === 'pinnedFirst') {
+            const pinnedArrivals = this._arrivalList.filter(arrival => arrival.isPinned);
+            const unpinnedArrivals = this._arrivalList.filter(arrival => !arrival.isPinned);
+            return [...pinnedArrivals, ...unpinnedArrivals];
+        }
+
+        // default mode
         return this._arrivalList;
     }
 
@@ -77,5 +84,15 @@ export class ArrivalCollection {
         this._arrivalList.forEach(arrival => addArrivalRecursively(arrival));
 
         return result;
+    }
+    
+    setArrivalPinState(tracingUri: vscode.Uri, pinState: boolean): boolean {
+        const arrival = this.get(tracingUri);
+        if (arrival) {
+            arrival.isPinned = pinState;
+            return true;
+        }
+
+        return false;
     }
 }

@@ -26,7 +26,7 @@ export class ArrivalHistoryProvider implements vscode.TreeDataProvider<Arrival> 
 	}
 
 	private getInitialChildren(): Arrival[] {
-		return this.arrivalCollection.asList();
+		return this.arrivalCollection.asList('pinnedFirst');
 	}
 
 	getChildren(element?: Arrival | undefined): vscode.ProviderResult<Arrival[]> {

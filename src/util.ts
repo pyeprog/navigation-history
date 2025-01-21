@@ -123,3 +123,21 @@ export function productIconPath(kind: vscode.SymbolKind): vscode.ThemeIcon {
             return new vscode.ThemeIcon('symbol-misc');
     }
 }
+
+
+/**
+ * 
+ * @param h hue, 0-360
+ * @param s saturation, 0-1
+ * @param v value, 0-1
+ * @returns hex string of rgb, like #ffffff
+ */
+export function hsvToRgbHex(h: number, s: number, v: number): string {
+    const c = v * s;
+    const x = c * (1 - Math.abs((h / 60) % 2 - 1));
+    const m = v - c;
+    const r = (h < 60) ? c : (h < 120) ? x : (h < 180) ? 0 : (h < 240) ? x : (h < 300) ? c : 0;
+    const g = (h < 60) ? x : (h < 120) ? c : (h < 180) ? x : (h < 240) ? 0 : (h < 300) ? x : c;
+    const b = (h < 60) ? 0 : (h < 120) ? x : (h < 180) ? c : (h < 240) ? x : (h < 300) ? 0 : c;
+    return `#${Math.round(r + m).toString(16).padStart(2, '0')}${Math.round(g + m).toString(16).padStart(2, '0')}${Math.round(b + m).toString(16).padStart(2, '0')}`;
+}

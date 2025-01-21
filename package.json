@@ -27,6 +27,16 @@
         "command": "navigationHistory.cleanup",
         "title": "Cleanup",
         "icon": "$(clear-all)"
+      },
+      {
+        "command": "navigationHistory.pin",
+        "title": "Pin",
+        "icon": "$(pin)"
+      },
+      {
+        "command": "navigationHistory.unpin",
+        "title": "Unpin",
+        "icon": "$(pinned)"
       }
     ],
     "menus": {
@@ -36,6 +46,28 @@
           "when": "view == navigationHistory",
           "group": "navigation",
           "title": "Cleanup"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "navigationHistory.pin",
+          "when": "view == navigationHistory && viewItem == arrivalRoot",
+          "group": "inline",
+          "arguments": [
+            {
+              "$treeItem": true
+            }
+          ]
+        },
+        {
+          "command": "navigationHistory.unpin",
+          "when": "view == navigationHistory && viewItem == arrivalRootPinned",
+          "group": "inline",
+          "arguments": [
+            {
+              "$treeItem": true
+            }
+          ]
         }
       ]
     }

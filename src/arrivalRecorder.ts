@@ -114,9 +114,8 @@ export class ArrivalRecorder {
                 }
             }
 
-
             // when move around outside the scope of latest arrival, this is the default behavior
-            debugLog("ADD A NEW ITEM TREE", true);
+            debugLog("ADD A NEW ITEM TREE", false);
             this.arrivalCollection.push(this.createNewArrivalTreeFromLeaf(arrival));
 
         } catch (exitCodeBlock) {

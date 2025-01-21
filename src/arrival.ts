@@ -9,6 +9,7 @@ export class Arrival implements ArrivalIterface {
     public word: string;
     public children: Arrival[] = [];
     public parent: Arrival | undefined | null = null;
+    public isPinned: boolean = false;
     private _encoreCount: number;
 
     constructor(
@@ -78,9 +79,11 @@ export class Arrival implements ArrivalIterface {
         // Position.line is 0-indexed in vscode, so we need to add 1 to make it 1-indexed, so is Position.character
         const lineNum = range.start.line + 1;
         const columnNum = range.start.character + 1;
+        const rootMark = !this.parent ? '<=[root]' : '';
 
+        treeItem.contextValue = `arrival${!this.parent ? 'Root' : ''}${this.isPinned ? 'Pinned' : ''}`;
         treeItem.iconPath = productIconPath(this.symbol.kind);
-        treeItem.description = `${filename} ${lineNum}:${columnNum}`;
+        treeItem.description = `${rootMark} ${filename} ${lineNum}:${columnNum}`;
         treeItem.tooltip = uriFsPath;
         treeItem.resourceUri = this.symbol.tracingUri;
         treeItem.command = {
