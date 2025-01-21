@@ -9,6 +9,7 @@ export class Arrival implements ArrivalIterface {
     public word: string;
     public children: Arrival[] = [];
     public parent: Arrival | undefined | null = null;
+    private _encoreCount: number;
 
     constructor(
         symbol: TracableSymbol,
@@ -16,6 +17,15 @@ export class Arrival implements ArrivalIterface {
     ) {
         this.symbol = symbol;
         this.word = word;
+        this._encoreCount = 0;
+    }
+
+    get encoreCount() {
+        return this._encoreCount;
+    }
+
+    encore() {
+        ++this._encoreCount;
     }
 
     get collapsibleState(): vscode.TreeItemCollapsibleState {
@@ -72,6 +82,7 @@ export class Arrival implements ArrivalIterface {
         treeItem.iconPath = productIconPath(this.symbol.kind);
         treeItem.description = `${filename} ${lineNum}:${columnNum}`;
         treeItem.tooltip = uriFsPath;
+        treeItem.resourceUri = this.symbol.tracingUri;
         treeItem.command = {
             command: 'vscode.open',
             arguments: [

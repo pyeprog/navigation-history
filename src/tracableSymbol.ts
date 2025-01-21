@@ -12,8 +12,8 @@ export class TracableSymbol extends vscode.DocumentSymbol {
         this.parent = parent || null;
     }
 
-    get id(): string {
-        return `${this.uri.fsPath}|${this.name}|${this.range.start.line}:${this.range.start.character}-${this.range.end.line}:${this.range.end.character}`;
+    get tracingUri(): vscode.Uri {
+        return vscode.Uri.parse(`tracableSymbol://${this.uri.fsPath}/${this.name}/${this.range.start.line}-${this.range.start.character}-${this.range.end.line}-${this.range.end.character}`);
     }
 
     isEqual(other: TracableSymbol): boolean {

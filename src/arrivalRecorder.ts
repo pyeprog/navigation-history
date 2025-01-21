@@ -47,23 +47,24 @@ export class ArrivalRecorder {
                     return arrival.symbol.isEqual(symbol);
                 }
 
-                const ancestorArrivalInTree: Arrival | undefined = this.findSymbolAncestorInArrivalTree(arrival.symbol, rootArrivalForSearching, doesArrivalHasSameSymbol);
+                const pastArrivalInTree: Arrival | undefined = this.findSymbolAncestorInArrivalTree(arrival.symbol, rootArrivalForSearching, doesArrivalHasSameSymbol);
 
                 // when move around in range of same symbol I've already arrived
-                if (ancestorArrivalInTree && ancestorArrivalInTree.isOnSameSymbolOf(arrival)) {
+                if (pastArrivalInTree && pastArrivalInTree.isOnSameSymbolOf(arrival)) {
                     debugLog("NOTHING SHOWS", false);
                     // if there's already in the tree an ancestor arrival that has the same symbol, then we don't add this arrival to the tree.
                     // but the recorded arrival(returned value) should be the ancestor arrival, not the current arrival.
                     // in another word, if we have already seen this symbol of the current arrival, we use the old arrival.
-                    recordedArrival = ancestorArrivalInTree;
+                    recordedArrival = pastArrivalInTree;
+                    pastArrivalInTree.encore();
                     exitCodeBlock();
                 }
 
                 // when move around in range of same symbol I've alread arrived but land on the unmet sub-symbol
-                if (ancestorArrivalInTree) {
+                if (pastArrivalInTree) {
                     debugLog("ADD A CHILD FOR LANDING ON SUB-SYMBOL", false);
-                    const newArrivalTreeRoot: Arrival = this.createNewArrivalTreeFromLeaf(arrival, ancestorArrivalInTree?.symbol);
-                    ancestorArrivalInTree.addChild(newArrivalTreeRoot);
+                    const newArrivalTreeRoot: Arrival = this.createNewArrivalTreeFromLeaf(arrival, pastArrivalInTree?.symbol);
+                    pastArrivalInTree.addChild(newArrivalTreeRoot);
                     exitCodeBlock();
                 }
 

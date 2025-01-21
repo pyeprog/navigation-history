@@ -3,6 +3,7 @@ import { ArrivalHistoryProvider } from './arrivalHistoryProvider';
 import { ArrivalRecorder } from './arrivalRecorder';
 import { ArrivalCollection } from './arrivalCollection';
 import { registerUpdatingHandler } from './eventHandlerRegister';
+import { ArrivalDecorationProvider } from './arrivalDecorationProvider';
 
 export function activate(context: vscode.ExtensionContext) {
 	const arrivalCollection = new ArrivalCollection();
@@ -14,7 +15,10 @@ export function activate(context: vscode.ExtensionContext) {
 	});
 	context.subscriptions.push(treeView);
 
-	const updatingHandler = registerUpdatingHandler(treeView, arrivalHistoryProvider, arrivalRecorder);
+	const arrivalDecorationProvider = new ArrivalDecorationProvider(arrivalCollection);
+    context.subscriptions.push(vscode.window.registerFileDecorationProvider(arrivalDecorationProvider));
+
+	const updatingHandler = registerUpdatingHandler(treeView, arrivalHistoryProvider, arrivalRecorder, arrivalDecorationProvider);
 	context.subscriptions.push(updatingHandler);
 
 	const cleanupCommand = vscode.commands.registerCommand(

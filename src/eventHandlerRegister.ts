@@ -3,12 +3,15 @@ import { ArrivalHistoryProvider } from './arrivalHistoryProvider';
 import { ArrivalRecorder } from './arrivalRecorder';
 import { parseArrivalFromEditorState } from './util';
 import { Arrival } from './arrival';
+import { ArrivalDecorationProvider } from './arrivalDecorationProvider';
 
 
 export function registerUpdatingHandler(
     treeView: vscode.TreeView<Arrival | null | undefined>,
     arrivalHistoryProvider: ArrivalHistoryProvider,
-    recorder: ArrivalRecorder) {
+    recorder: ArrivalRecorder,
+    decorationProvider: ArrivalDecorationProvider,
+) {
 
     return vscode.window.onDidChangeTextEditorSelection(async (event) => {
         if (!event) {
@@ -21,7 +24,10 @@ export function registerUpdatingHandler(
         }
 
         const savedArrival = recorder.record(arrival);
+
         arrivalHistoryProvider.refresh();
+        decorationProvider.refresh();
+
         treeView.reveal(savedArrival, { select: true, focus: false, expand: 3 });
     });
 }
