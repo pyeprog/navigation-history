@@ -4,7 +4,7 @@
   "description": "Help you read code more easily by providing navigation history in a nicer way",
   "version": "0.0.1",
   "engines": {
-    "vscode": "^1.96.0"
+    "vscode": "^1.80.0"
   },
   "categories": [
     "Other"

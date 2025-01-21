@@ -37,9 +37,9 @@ export class ArrivalHistoryProvider implements vscode.TreeDataProvider<Arrival> 
 		return element.children;
 	}
 
-	getParent(element: Arrival): vscode.ProviderResult<Arrival | null | undefined>{
+	getParent(element: Arrival): vscode.ProviderResult<Arrival | null | undefined> {
 		return element.parent;
-	} 
+	}
 
 	// // ??
 	// resolveTreeItem(item: vscode.TreeItem, element: Arrival, token: vscode.CancellationToken): vscode.ProviderResult<vscode.TreeItem> {

@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { TracableSymbol } from './tracableSymbol';
 import { debugLog } from './debug';
-import { extractSymbols } from './util';
+import { productIconPath } from './util';
 
 
 export class Arrival implements ArrivalIterface {
@@ -62,25 +62,6 @@ export class Arrival implements ArrivalIterface {
         const symbolDisplayName = (this.symbol.kind === vscode.SymbolKind.Method) ? `.${this.symbol.name}` : this.symbol.name;
         let treeItem = new vscode.TreeItem(symbolDisplayName, this.collapsibleState);
 
-        switch (this.symbol.kind) {
-            case vscode.SymbolKind.Class:
-                treeItem.iconPath = new vscode.ThemeIcon('symbol-class');
-                break;
-
-            case vscode.SymbolKind.Variable:
-                treeItem.iconPath = new vscode.ThemeIcon('symbol-variable');
-                break;
-
-            case vscode.SymbolKind.Function:
-            case vscode.SymbolKind.Method:
-                treeItem.iconPath = new vscode.ThemeIcon('symbol-function');
-                break;
-
-            default:
-                treeItem.iconPath = new vscode.ThemeIcon('symbol-object');
-                break;
-        }
-
         const uriFsPath = this.symbol.uri.fsPath;
         const filename = uriFsPath.split('/').pop();
         const range = this.symbol.range;
@@ -88,6 +69,7 @@ export class Arrival implements ArrivalIterface {
         const lineNum = range.start.line + 1;
         const columnNum = range.start.character + 1;
 
+        treeItem.iconPath = productIconPath(this.symbol.kind);
         treeItem.description = `${filename} ${lineNum}:${columnNum}`;
         treeItem.tooltip = uriFsPath;
         treeItem.command = {

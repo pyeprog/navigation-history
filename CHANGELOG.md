@@ -6,4 +6,7 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ## [Unreleased]
 
-- Initial release
+- add basic navigation tracking logic.
+- add basic navigation history tree view.
+- add cleanup button at the title bar of navigation history tree view.
+- add symbol revealing logic.

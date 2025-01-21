@@ -64,3 +64,62 @@ export async function parseArrivalFromEditorState(editor: vscode.TextEditor) {
 
 }
 
+
+export function productIconPath(kind: vscode.SymbolKind): vscode.ThemeIcon {
+    switch (kind) {
+        case vscode.SymbolKind.File:
+            return new vscode.ThemeIcon('symbol-file');
+        case vscode.SymbolKind.Class:
+            return new vscode.ThemeIcon('symbol-class');
+        case vscode.SymbolKind.Method:
+            return new vscode.ThemeIcon('symbol-method');
+        case vscode.SymbolKind.Property:
+            return new vscode.ThemeIcon('symbol-property');
+        case vscode.SymbolKind.Field:
+            return new vscode.ThemeIcon('symbol-field');
+        case vscode.SymbolKind.Constructor:
+            return new vscode.ThemeIcon('symbol-constructor');
+        case vscode.SymbolKind.Enum:
+            return new vscode.ThemeIcon('symbol-enum');
+        case vscode.SymbolKind.Interface:
+            return new vscode.ThemeIcon('symbol-interface');
+        case vscode.SymbolKind.Function:
+            return new vscode.ThemeIcon('symbol-function');
+        case vscode.SymbolKind.Variable:
+            return new vscode.ThemeIcon('symbol-variable');
+        case vscode.SymbolKind.Constant:
+            return new vscode.ThemeIcon('symbol-constant');
+        case vscode.SymbolKind.String:
+            return new vscode.ThemeIcon('symbol-string');
+        case vscode.SymbolKind.Number:
+            return new vscode.ThemeIcon('symbol-numeric');
+        case vscode.SymbolKind.Boolean:
+            return new vscode.ThemeIcon('symbol-boolean');
+        case vscode.SymbolKind.Array:
+            return new vscode.ThemeIcon('symbol-array');
+        case vscode.SymbolKind.Object:
+            return new vscode.ThemeIcon('symbol-object');
+        case vscode.SymbolKind.Key:
+            return new vscode.ThemeIcon('symbol-key');
+        case vscode.SymbolKind.Null:
+            return new vscode.ThemeIcon('symbol-null');
+        case vscode.SymbolKind.EnumMember:
+            return new vscode.ThemeIcon('symbol-enum-member');
+        case vscode.SymbolKind.Struct:
+            return new vscode.ThemeIcon('symbol-struct');
+        case vscode.SymbolKind.Event:
+            return new vscode.ThemeIcon('symbol-event');
+        case vscode.SymbolKind.Operator:
+            return new vscode.ThemeIcon('symbol-operator');
+        case vscode.SymbolKind.TypeParameter:
+            return new vscode.ThemeIcon('symbol-parameter');
+        case vscode.SymbolKind.Module:
+            return new vscode.ThemeIcon('symbol-module');
+        case vscode.SymbolKind.Package:
+            return new vscode.ThemeIcon('symbol-package');
+        case vscode.SymbolKind.Namespace:
+            return new vscode.ThemeIcon('symbol-namespace');
+        default:
+            return new vscode.ThemeIcon('symbol-misc');
+    }
+}
