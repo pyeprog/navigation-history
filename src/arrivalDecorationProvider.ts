@@ -17,13 +17,15 @@ export class ArrivalDecorationProvider implements vscode.FileDecorationProvider 
             return {};
         }
 
-        const encoreCount = arrival.encoreCount;
+        const visitingCount = (arrival.encoreCount > 98 ? 98 : arrival.encoreCount) + 1;
+        
+        // tracing symbol's uri guarantees that it has no less than 2 parts and the second last part is the symbol name
         const symbolName = uri.path.split('/').at(-2);
 
         return {
-            badge: `${encoreCount}`,
-            tooltip: `${symbolName} has been encored ${encoreCount} times`,
-            color: this.color(encoreCount),
+            badge: `${visitingCount}`,
+            tooltip: `${symbolName} has been checked for ${visitingCount} times`,
+            color: this.color(visitingCount),
         };
     }
     

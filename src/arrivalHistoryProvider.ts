@@ -26,7 +26,7 @@ export class ArrivalHistoryProvider implements vscode.TreeDataProvider<Arrival> 
 	}
 
 	private getInitialChildren(): Arrival[] {
-		return this.arrivalCollection.list;
+		return this.arrivalCollection.asList();
 	}
 
 	getChildren(element?: Arrival | undefined): vscode.ProviderResult<Arrival[]> {
@@ -40,11 +40,6 @@ export class ArrivalHistoryProvider implements vscode.TreeDataProvider<Arrival> 
 	getParent(element: Arrival): vscode.ProviderResult<Arrival | null | undefined> {
 		return element.parent;
 	}
-
-	// // ??
-	// resolveTreeItem(item: vscode.TreeItem, element: Arrival, token: vscode.CancellationToken): vscode.ProviderResult<vscode.TreeItem> {
-	// 	return item;
-	// }
 }
 
 

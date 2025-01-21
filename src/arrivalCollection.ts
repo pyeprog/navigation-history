@@ -4,7 +4,7 @@ import { Arrival } from "./arrival";
 export class ArrivalCollection {
     private _arrivalList: Array<Arrival> = new Array();
 
-    get list(): Arrival[] {
+    asList(): Arrival[] {
         return this._arrivalList;
     }
 
