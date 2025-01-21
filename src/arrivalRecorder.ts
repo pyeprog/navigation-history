@@ -28,7 +28,7 @@ export class ArrivalRecorder {
         const exitCodeBlock = () => {
             throw new Error("exit the code block");
         };
-        
+
         let recordedArrival: Arrival = arrival;
 
         try {
@@ -39,78 +39,83 @@ export class ArrivalRecorder {
                 exitCodeBlock();
             }
 
-            const latestRootArrival = this.arrivalCollection.at(-1);
+            // iterate through arrival collection from latest to oldest
+            for (let i = this.arrivalCollection.length - 1; i >= 0; --i) {
+                const rootArrivalForSearching = this.arrivalCollection.at(i);
 
-            function doesArrivalHasSameSymbol(symbol: TracableSymbol, arrival: Arrival) {
-                return arrival.symbol.isEqual(symbol);
-            }
-
-            const ancestorArrivalInTree: Arrival | undefined = this.findSymbolAncestorInArrivalTree(arrival.symbol, latestRootArrival, doesArrivalHasSameSymbol);
-
-            // when move around in range of same symbol I've already arrived
-            if (ancestorArrivalInTree && ancestorArrivalInTree.isOnSameSymbolOf(arrival)) {
-                debugLog("NOTHING SHOWS", false);
-                // if there's already in the tree an ancestor arrival that has the same symbol, then we don't add this arrival to the tree.
-                // but the recorded arrival(returned value) should be the ancestor arrival, not the current arrival.
-                // in another word, if we have already seen this symbol of the current arrival, we use the old arrival.
-                recordedArrival = ancestorArrivalInTree;
-                exitCodeBlock();
-            }
-
-            // when move around in range of same symbol I've alread arrived but land on the unmet sub-symbol
-            if (ancestorArrivalInTree) {
-                debugLog("ADD A CHILD FOR LANDING ON SUB-SYMBOL", false);
-                const newArrivalTreeRoot: Arrival = this.createNewArrivalTreeFromLeaf(arrival, ancestorArrivalInTree?.symbol);
-                ancestorArrivalInTree.addChild(newArrivalTreeRoot);
-                exitCodeBlock();
-            }
-
-            // when drill into(jump to) another function or (independent) variable from function
-            if (!this.latestArrival?.isOnSameSymbolOf(arrival)
-                && this.latestArrival?.word === arrival.symbol.name
-                && arrival.symbol.parent?.kind !== vscode.SymbolKind.Class) {
-
-                debugLog("ADD A CHILD FOR DRILLING IN", false);
-                const latestArrivalInTree = this.findInArrivalTree(this.latestArrival.symbol, latestRootArrival, doesArrivalHasSameSymbol);
-                if (latestArrivalInTree) {
-                    latestArrivalInTree.word = this.latestArrival.word;
-                    latestArrivalInTree.addChild(arrival);
+                function doesArrivalHasSameSymbol(symbol: TracableSymbol, arrival: Arrival) {
+                    return arrival.symbol.isEqual(symbol);
                 }
-                exitCodeBlock();
-            }
 
-            // when drill into(jump to) another class method or class variable from function
-            if (!this.latestArrival?.isOnSameSymbolOf(arrival)
-                && this.latestArrival?.word === arrival.symbol.name
-                && arrival.symbol.parent?.kind === vscode.SymbolKind.Class) {
+                const ancestorArrivalInTree: Arrival | undefined = this.findSymbolAncestorInArrivalTree(arrival.symbol, rootArrivalForSearching, doesArrivalHasSameSymbol);
 
-                // don't combine this block with other ones for simplicity, the logic of this block is different from the other ones,
-                // they will evolve independently, thus a little bit of redundancy is acceptable.
-                const latestArrivalInTree = this.findInArrivalTree(this.latestArrival.symbol, latestRootArrival, doesArrivalHasSameSymbol);
+                // when move around in range of same symbol I've already arrived
+                if (ancestorArrivalInTree && ancestorArrivalInTree.isOnSameSymbolOf(arrival)) {
+                    debugLog("NOTHING SHOWS", false);
+                    // if there's already in the tree an ancestor arrival that has the same symbol, then we don't add this arrival to the tree.
+                    // but the recorded arrival(returned value) should be the ancestor arrival, not the current arrival.
+                    // in another word, if we have already seen this symbol of the current arrival, we use the old arrival.
+                    recordedArrival = ancestorArrivalInTree;
+                    exitCodeBlock();
+                }
 
-                if (latestArrivalInTree) {
-                    latestArrivalInTree.word = arrival.word;
-                    debugLog("ADD A CHILD FOR CLASS AND GRANDCHILD FOR SYMBOL", false);
-                    const classSymbolArrivalInTree = this.findInArrivalTree(arrival.symbol.parent, latestRootArrival, doesArrivalHasSameSymbol);
-                    // class symbol is already the child of the latest arrival
-                    if (classSymbolArrivalInTree) {
-                        classSymbolArrivalInTree.addChild(arrival);
-                        exitCodeBlock();
+                // when move around in range of same symbol I've alread arrived but land on the unmet sub-symbol
+                if (ancestorArrivalInTree) {
+                    debugLog("ADD A CHILD FOR LANDING ON SUB-SYMBOL", false);
+                    const newArrivalTreeRoot: Arrival = this.createNewArrivalTreeFromLeaf(arrival, ancestorArrivalInTree?.symbol);
+                    ancestorArrivalInTree.addChild(newArrivalTreeRoot);
+                    exitCodeBlock();
+                }
 
-                        // class symbol is not the child of the latest arrival
-                    } else {
-                        // add class symbol as a child of the latest arrival, bind current arrival as the child of class symbol
-                        const classSymbolArrival = new Arrival(arrival.symbol.parent, arrival.symbol.parent.name);
-                        classSymbolArrival.addChild(arrival);
-                        classSymbolArrival.setParent(latestArrivalInTree);
-                        latestArrivalInTree.addChild(classSymbolArrival);
-                        exitCodeBlock();
+                // when drill into(jump to) another function or (independent) variable from function
+                if (!this.latestArrival?.isOnSameSymbolOf(arrival)
+                    && this.latestArrival?.word === arrival.symbol.name
+                    && [vscode.SymbolKind.Function, vscode.SymbolKind.Variable, vscode.SymbolKind.Constant].includes(arrival.symbol.kind)
+                    && !arrival.symbol.parent) {
+
+                    debugLog("ADD A CHILD FOR DRILLING IN", false);
+                    const latestArrivalInTree = this.findInArrivalTree(this.latestArrival.symbol, rootArrivalForSearching, doesArrivalHasSameSymbol);
+                    if (latestArrivalInTree) {
+                        latestArrivalInTree.word = this.latestArrival.word;
+                        latestArrivalInTree.addChild(arrival);
+                    }
+                    exitCodeBlock();
+                }
+
+                // when drill into(jump to) another class method or class variable from function
+                if (!this.latestArrival?.isOnSameSymbolOf(arrival)
+                    && this.latestArrival?.word === arrival.symbol.name
+                    && arrival.symbol.parent?.kind === vscode.SymbolKind.Class) {
+
+                    // don't combine this block with other ones for simplicity, the logic of this block is different from the other ones,
+                    // they will evolve independently, thus a little bit of redundancy is acceptable.
+                    const latestArrivalInTree = this.findInArrivalTree(this.latestArrival.symbol, rootArrivalForSearching, doesArrivalHasSameSymbol);
+
+                    if (latestArrivalInTree) {
+                        latestArrivalInTree.word = arrival.word;
+                        debugLog("ADD A CHILD FOR CLASS AND GRANDCHILD FOR SYMBOL", false);
+                        const classSymbolArrivalInTree = this.findInArrivalTree(arrival.symbol.parent, rootArrivalForSearching, doesArrivalHasSameSymbol);
+                        // class symbol is already the child of the latest arrival
+                        if (classSymbolArrivalInTree) {
+                            classSymbolArrivalInTree.addChild(arrival);
+                            exitCodeBlock();
+
+                            // class symbol is not the child of the latest arrival
+                        } else {
+                            // add class symbol as a child of the latest arrival, bind current arrival as the child of class symbol
+                            const classSymbolArrival = new Arrival(arrival.symbol.parent, arrival.symbol.parent.name);
+                            classSymbolArrival.addChild(arrival);
+                            classSymbolArrival.setParent(latestArrivalInTree);
+                            latestArrivalInTree.addChild(classSymbolArrival);
+                            exitCodeBlock();
+                        }
                     }
                 }
             }
 
+
             // when move around outside the scope of latest arrival, this is the default behavior
-            debugLog("ADD A NEW ITEM TREE", false);
+            debugLog("ADD A NEW ITEM TREE", true);
             this.arrivalCollection.push(this.createNewArrivalTreeFromLeaf(arrival));
 
         } catch (exitCodeBlock) {
@@ -118,7 +123,7 @@ export class ArrivalRecorder {
         } finally {
             this.latestArrival = arrival;
         }
-        
+
         return recordedArrival;
     }
 
