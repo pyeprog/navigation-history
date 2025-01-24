@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import { TracableSymbol } from './tracableSymbol';
 import { debugLog } from './debug';
 import { productIconPath } from './util';
+import assert from 'assert';
 
 
 export class Arrival implements ArrivalIterface {
@@ -10,6 +11,7 @@ export class Arrival implements ArrivalIterface {
     public children: Arrival[] = [];
     public parent: Arrival | undefined | null = null;
     public isPinned: boolean = false;
+    public delimiterString: string = '';
     private _encoreCount: number;
 
     constructor(
@@ -21,10 +23,30 @@ export class Arrival implements ArrivalIterface {
         this._encoreCount = 0;
     }
 
-    get encoreCount() {
-        return this._encoreCount;
+    static createDelimiter(delimiterString: string): Arrival {
+        assert(delimiterString, 'delimiterString is required to be a non-empty string');
+        const delimiter = new Arrival(TracableSymbol.empty(), '');
+        delimiter.delimiterString = delimiterString;
+        return delimiter;
     }
 
+    /**
+     * The encore count of the arrival itself.
+     */
+    get selfEncoreCount() {
+        return this._encoreCount;
+    }
+    
+    /**
+     * The total encore count of the arrival and all its children.
+     */
+    get treeEncoreCount() {
+        return this.selfEncoreCount + this.children.reduce((acc, child): number => acc + child.treeEncoreCount, 0);
+    }
+
+    /**
+     * Increment the encore count of the arrival itself.
+     */
     encore() {
         ++this._encoreCount;
     }
@@ -70,6 +92,12 @@ export class Arrival implements ArrivalIterface {
     public treeItemAdapter(): vscode.TreeItem {
         debugLog(`${this.symbol.name}.collapseState = ${this.collapsibleState}`, false);
 
+        if (this.delimiterString) {
+            const treeItem = new vscode.TreeItem('', vscode.TreeItemCollapsibleState.None);
+            treeItem.description = this.delimiterString;
+            return treeItem;
+        }
+
         const symbolDisplayName = (this.symbol.kind === vscode.SymbolKind.Method) ? `.${this.symbol.name}` : this.symbol.name;
         let treeItem = new vscode.TreeItem(symbolDisplayName, this.collapsibleState);
 
@@ -79,11 +107,10 @@ export class Arrival implements ArrivalIterface {
         // Position.line is 0-indexed in vscode, so we need to add 1 to make it 1-indexed, so is Position.character
         const lineNum = range.start.line + 1;
         const columnNum = range.start.character + 1;
-        const rootMark = !this.parent ? '<=[root]' : '';
 
         treeItem.contextValue = `arrival${!this.parent ? 'Root' : ''}${this.isPinned ? 'Pinned' : ''}`;
         treeItem.iconPath = productIconPath(this.symbol.kind);
-        treeItem.description = `${rootMark} ${filename} ${lineNum}:${columnNum}`;
+        treeItem.description = `${filename} ${lineNum}:${columnNum}`;
         treeItem.tooltip = uriFsPath;
         treeItem.resourceUri = this.symbol.tracingUri;
         treeItem.command = {

@@ -1,3 +1,4 @@
+import assert from 'assert';
 import * as vscode from 'vscode';
 
 export class TracableSymbol extends vscode.DocumentSymbol {
@@ -6,10 +7,16 @@ export class TracableSymbol extends vscode.DocumentSymbol {
     parent: TracableSymbol | undefined | null;
 
     constructor(uri: vscode.Uri, name: string, detail: string, kind: vscode.SymbolKind, range: vscode.Range, selectionRange: vscode.Range, children?: TracableSymbol[], parent?: TracableSymbol) {
+        assert(name, 'name is required to be a non-empty string, or Symbol is in ill format, and exception will be thrown');
+
         super(name, detail, kind, range, selectionRange);
         this.uri = uri;
         this.children = children || [];
         this.parent = parent || null;
+    }
+    
+    static empty(): TracableSymbol {
+        return new TracableSymbol(vscode.Uri.parse('delimiter'), 'delimiter', '', vscode.SymbolKind.File, new vscode.Range(0, 0, 0, 1), new vscode.Range(0, 0, 0, 1));
     }
 
     get tracingUri(): vscode.Uri {

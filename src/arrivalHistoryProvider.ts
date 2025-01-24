@@ -10,7 +10,7 @@ export class ArrivalHistoryProvider implements vscode.TreeDataProvider<Arrival> 
 	constructor(arrivalCollection: ArrivalCollection) {
 		this.arrivalCollection = arrivalCollection;
 	}
-
+	
 	refresh() {
 		this._onDidChangeTreeData.fire();
 	}
@@ -26,7 +26,7 @@ export class ArrivalHistoryProvider implements vscode.TreeDataProvider<Arrival> 
 	}
 
 	private getInitialChildren(): Arrival[] {
-		return this.arrivalCollection.asList('pinnedFirst');
+		return this.arrivalCollection.asList();
 	}
 
 	getChildren(element?: Arrival | undefined): vscode.ProviderResult<Arrival[]> {

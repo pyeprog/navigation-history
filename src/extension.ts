@@ -12,7 +12,6 @@ export function activate(context: vscode.ExtensionContext) {
 	const arrivalHistoryProvider = new ArrivalHistoryProvider(arrivalCollection);
 	const treeView = vscode.window.createTreeView('navigationHistory', {
 		treeDataProvider: arrivalHistoryProvider,
-		showCollapseAll: true,
 	});
 	context.subscriptions.push(treeView);
 
@@ -45,8 +44,24 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 	);
 	context.subscriptions.push(unpinCommand);
-	
-	// TODO: bug, when unpin a pinned arrival, the order of the tree item is not updated
+
+	const switchSortStrategyCommand = vscode.commands.registerCommand(
+		'navigationHistory.switchSortOrder',
+		() => {
+			arrivalCollection.switchSortOrder();
+			arrivalHistoryProvider.refresh();
+		}
+	);
+	context.subscriptions.push(switchSortStrategyCommand);
+
+	const switchSortFieldCommand = vscode.commands.registerCommand(
+		'navigationHistory.switchSortField',
+		() => {
+			arrivalCollection.switchSortField();
+			arrivalHistoryProvider.refresh();
+		}
+	);
+	context.subscriptions.push(switchSortFieldCommand);
 }
 
 export function deactivate() { }

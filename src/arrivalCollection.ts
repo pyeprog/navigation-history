@@ -1,18 +1,82 @@
 import * as vscode from 'vscode';
 import { Arrival } from "./arrival";
 
+export type SortStrategy = 'latestFirst' | 'oldestFirst' | 'hottestFirst';
+export type SortOrder = 'ascending' | 'descending';
+export type SortField = 'time' | 'encore';
+
 export class ArrivalCollection {
     private _arrivalList: Array<Arrival> = new Array();
+    private _sortOrder: SortOrder = 'ascending';
+    private _sortField: SortField = 'time';
+    private _delimiterString: string = ' ';
 
-    asList(mode: 'pinnedFirst' | 'default' = 'default'): Arrival[] {
-        if (mode === 'pinnedFirst') {
-            const pinnedArrivals = this._arrivalList.filter(arrival => arrival.isPinned);
-            const unpinnedArrivals = this._arrivalList.filter(arrival => !arrival.isPinned);
-            return [...pinnedArrivals, ...unpinnedArrivals];
+    asList(): Arrival[] {
+        function addDelimiter(arrivals: Arrival[], delimiterString: string) {
+            if (delimiterString.length === 0) {
+                return arrivals;
+            }
+
+            const delimiter = Arrival.createDelimiter(delimiterString);
+            const result: Arrival[] = [];
+            for (const arrival of arrivals) {
+                result.push(arrival);
+                result.push(delimiter);
+            }
+            // pop the delimiter at the end
+            result.pop();
+            return result;
         }
 
-        // default mode
-        return this._arrivalList;
+        function sortArrivals(arrivals: Arrival[], sortOrder: SortOrder, sortBy: SortField): Arrival[] {
+            function compare(value1: number, value2: number): number {
+                return sortOrder === 'ascending' ? value1 - value2 : value2 - value1;
+            }
+
+            type ArrivalWithIndex = [Arrival, number];
+            function valueOf(arrivalWithIndex: ArrivalWithIndex): number {
+                const [arrival, index] = arrivalWithIndex;
+                return sortBy === 'time' ? index : arrival.treeEncoreCount;
+            }
+
+            const arrivalWithIndex: ArrivalWithIndex[] = arrivals.map((arrival, index) => ([arrival, index]));
+
+            arrivalWithIndex.sort((tuple1, tuple2) => compare(valueOf(tuple1), valueOf(tuple2)));
+
+            return arrivalWithIndex.map(([arrival, _]) => arrival);
+        }
+
+        const pinnedArrivals = sortArrivals(this._arrivalList, this._sortOrder, this._sortField).filter(arrival => arrival.isPinned);
+        const unpinnedArrivals = sortArrivals(this._arrivalList, this._sortOrder, this._sortField).filter(arrival => !arrival.isPinned);
+        const orderIcon = this._sortOrder === 'ascending' ? '↑' : '↓';
+        const delimiterInfo: string[] = [
+            ...(pinnedArrivals.length > 0 ? [`↑ ${pinnedArrivals.length} pinned`] : []),
+            `sorted by (${this._sortField})`,
+            `order (${orderIcon})`,
+        ];
+        const sectionDelimiters = Arrival.createDelimiter(delimiterInfo.join(' | '));
+        const result = [
+            ...addDelimiter(pinnedArrivals, this._delimiterString),
+            sectionDelimiters,
+            ...addDelimiter(unpinnedArrivals, this._delimiterString)
+        ];
+
+        return result;
+    }
+
+    switchSortOrder(): ArrivalCollection {
+        this._sortOrder = this._sortOrder === 'ascending' ? 'descending' : 'ascending';
+        return this;
+    }
+
+    switchSortField(): ArrivalCollection {
+        this._sortField = this._sortField === 'time' ? 'encore' : 'time';
+        return this;
+    }
+
+    setDelimiterString(delimiterString: string): ArrivalCollection {
+        this._delimiterString = delimiterString;
+        return this;
     }
 
     get length(): number {
@@ -85,7 +149,7 @@ export class ArrivalCollection {
 
         return result;
     }
-    
+
     setArrivalPinState(tracingUri: vscode.Uri, pinState: boolean): boolean {
         const arrival = this.get(tracingUri);
         if (arrival) {

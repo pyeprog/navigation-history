@@ -37,6 +37,16 @@
         "command": "navigationHistory.unpin",
         "title": "Unpin",
         "icon": "$(pinned)"
+      },
+      {
+        "command": "navigationHistory.switchSortOrder",
+        "title": "Switch Sort Order",
+        "icon": "$(arrow-swap)"
+      },
+      {
+        "command": "navigationHistory.switchSortField",
+        "title": "Switch Sort Field",
+        "icon": "$(sort-precedence)"
       }
     ],
     "menus": {
@@ -46,6 +56,18 @@
           "when": "view == navigationHistory",
           "group": "navigation",
           "title": "Cleanup"
+        },
+        {
+          "command": "navigationHistory.switchSortOrder",
+          "when": "view == navigationHistory",
+          "group": "navigation",
+          "title": "Sort"
+        },
+        {
+          "command": "navigationHistory.switchSortField",
+          "when": "view == navigationHistory",
+          "group": "navigation",
+          "title": "Sort Field"
         }
       ],
       "view/item/context": [
