@@ -7,9 +7,11 @@ export type SortField = 'time' | 'encore';
 
 export class ArrivalCollection {
     private _arrivalList: Array<Arrival> = new Array();
-    private _sortOrder: SortOrder = 'ascending';
+    private _sortOrder: SortOrder = 'descending';
     private _sortField: SortField = 'time';
-    private _delimiterString: string = ' ';
+    private _delimiterString: string = '';
+    public isFolded: boolean = true;
+    public unpinFoldThreshold: number = 20;
 
     asList(): Arrival[] {
         function addDelimiter(arrivals: Arrival[], delimiterString: string) {
@@ -46,15 +48,31 @@ export class ArrivalCollection {
             return arrivalWithIndex.map(([arrival, _]) => arrival);
         }
 
+        const originUnpinnedArrivals = sortArrivals(this._arrivalList, this._sortOrder, this._sortField).filter(arrival => !arrival.isPinned);
+        const shortenUnpinnedArrivals = this.isFolded ? originUnpinnedArrivals.slice(0, this.unpinFoldThreshold) : originUnpinnedArrivals;
+        let unpinnedArrivals: Arrival[];
+        if (originUnpinnedArrivals.length > this.unpinFoldThreshold && this.isFolded) {
+            if (this._sortOrder === 'ascending') {
+                unpinnedArrivals = [Arrival.createFoldPlaceholder(), ...shortenUnpinnedArrivals];
+            } else {
+                unpinnedArrivals = [...shortenUnpinnedArrivals, Arrival.createFoldPlaceholder()];
+            }
+        } else {
+            unpinnedArrivals = originUnpinnedArrivals;
+        }
+
         const pinnedArrivals = sortArrivals(this._arrivalList, this._sortOrder, this._sortField).filter(arrival => arrival.isPinned);
-        const unpinnedArrivals = sortArrivals(this._arrivalList, this._sortOrder, this._sortField).filter(arrival => !arrival.isPinned);
         const orderIcon = this._sortOrder === 'ascending' ? '↑' : '↓';
+        const foldStatus = this.isFolded ? `${this.unpinFoldThreshold}` : '◼︎';
         const delimiterInfo: string[] = [
             ...(pinnedArrivals.length > 0 ? [`↑ ${pinnedArrivals.length} pinned`] : []),
+            `↓ ${unpinnedArrivals.length} unpinned`,
             `sorted by (${this._sortField})`,
             `order (${orderIcon})`,
+            `fold (${foldStatus})`,
         ];
-        const sectionDelimiters = Arrival.createDelimiter(delimiterInfo.join(' | '));
+        const sectionDelimiters = Arrival.createDelimiter(delimiterInfo.join(' | '), true);
+
         const result = [
             ...addDelimiter(pinnedArrivals, this._delimiterString),
             sectionDelimiters,
@@ -63,7 +81,7 @@ export class ArrivalCollection {
 
         return result;
     }
-
+    
     switchSortOrder(): ArrivalCollection {
         this._sortOrder = this._sortOrder === 'ascending' ? 'descending' : 'ascending';
         return this;
@@ -107,7 +125,21 @@ export class ArrivalCollection {
         this._arrivalList = [];
     }
 
-    get(tracingUri: vscode.Uri, defaultValue: Arrival | null = null): Arrival | null {
+    delete(arrival: Arrival) {
+        const found = this.getByTracingUri(arrival.symbol.tracingUri);
+        if (!found) {
+            return;
+        }
+        this._arrivalList = this._arrivalList.filter(a => a.symbol.tracingUri.toString() !== arrival.symbol.tracingUri.toString());
+        arrival.parent?.removeChild(arrival);
+    }
+
+    deleteOtherTrees(arrival: Arrival) {
+        const remainingArrival = arrival.root;
+        this._arrivalList = this._arrivalList.filter(a => a.symbol.tracingUri.toString() === remainingArrival.symbol.tracingUri.toString());
+    }
+
+    getByTracingUri(tracingUri: vscode.Uri, defaultValue: Arrival | null = null): Arrival | null {
         const tracingUriString = tracingUri.toString();
 
         function findArrivalInTree(root: Arrival, tracingUriString: string): Arrival | null {
@@ -151,7 +183,7 @@ export class ArrivalCollection {
     }
 
     setArrivalPinState(tracingUri: vscode.Uri, pinState: boolean): boolean {
-        const arrival = this.get(tracingUri);
+        const arrival = this.getByTracingUri(tracingUri);
         if (arrival) {
             arrival.isPinned = pinState;
             return true;

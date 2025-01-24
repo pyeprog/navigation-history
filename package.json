@@ -29,6 +29,16 @@
         "icon": "$(clear-all)"
       },
       {
+        "command": "navigationHistory.delete",
+        "title": "Delete",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "navigationHistory.deleteOtherTrees",
+        "title": "Delete Others",
+        "icon": "$(trash)"
+      },
+      {
         "command": "navigationHistory.pin",
         "title": "Pin",
         "icon": "$(pin)"
@@ -47,6 +57,16 @@
         "command": "navigationHistory.switchSortField",
         "title": "Switch Sort Field",
         "icon": "$(sort-precedence)"
+      },
+      {
+        "command": "navigationHistory.unfold",
+        "title": "Unfold",
+        "icon": "$(unfold)"
+      },
+      {
+        "command": "navigationHistory.fold",
+        "title": "Fold",
+        "icon": "$(fold)"
       }
     ],
     "menus": {
@@ -68,6 +88,11 @@
           "when": "view == navigationHistory",
           "group": "navigation",
           "title": "Sort Field"
+        },
+        {
+          "command": "navigationHistory.fold",
+          "when": "view == navigationHistory",
+          "title": "Fold"
         }
       ],
       "view/item/context": [
@@ -85,6 +110,24 @@
           "command": "navigationHistory.unpin",
           "when": "view == navigationHistory && viewItem == arrivalRootPinned",
           "group": "inline",
+          "arguments": [
+            {
+              "$treeItem": true
+            }
+          ]
+        },
+        {
+          "command": "navigationHistory.delete",
+          "when": "view == navigationHistory",
+          "arguments": [
+            {
+              "$treeItem": true
+            }
+          ]
+        },
+        {
+          "command": "navigationHistory.deleteOtherTrees",
+          "when": "view == navigationHistory",
           "arguments": [
             {
               "$treeItem": true

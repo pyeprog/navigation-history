@@ -12,7 +12,7 @@ export class ArrivalDecorationProvider implements vscode.FileDecorationProvider 
             return {};
         }
 
-        const arrival = this.arrivalCollection.get(uri);
+        const arrival = this.arrivalCollection.getByTracingUri(uri);
         if (!arrival) {
             return {};
         }

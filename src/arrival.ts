@@ -11,8 +11,12 @@ export class Arrival implements ArrivalIterface {
     public children: Arrival[] = [];
     public parent: Arrival | undefined | null = null;
     public isPinned: boolean = false;
-    public delimiterString: string = '';
     private _encoreCount: number;
+
+    // for UI, the priority is delimiterString > isFoldPlaceholder, if option of higher priority is set, lower priority one is ignored
+    public delimiterString: string = '';
+    private _isSectionDelimiter: boolean = false;
+    public isFoldPlaceholder: boolean = false;
 
     constructor(
         symbol: TracableSymbol,
@@ -23,11 +27,26 @@ export class Arrival implements ArrivalIterface {
         this._encoreCount = 0;
     }
 
-    static createDelimiter(delimiterString: string): Arrival {
+    static createDelimiter(delimiterString: string, isSectionDelimiter: boolean = false): Arrival {
         assert(delimiterString, 'delimiterString is required to be a non-empty string');
         const delimiter = new Arrival(TracableSymbol.empty(), '');
         delimiter.delimiterString = delimiterString;
+        delimiter._isSectionDelimiter = isSectionDelimiter;
         return delimiter;
+    }
+    
+    static createFoldPlaceholder(): Arrival {
+        const placeholder = new Arrival(TracableSymbol.empty(), '');
+        placeholder.isFoldPlaceholder = true;
+        return placeholder;
+    }
+    
+    get root(): Arrival {
+        let root: Arrival = this;
+        while (root.parent) {
+            root = root.parent;
+        }
+        return root;
     }
 
     /**
@@ -89,12 +108,30 @@ export class Arrival implements ArrivalIterface {
         return this;
     }
 
+    removeChild(child: Arrival) {
+        this.children = this.children.filter(c => c.symbol.tracingUri.toString() !== child.symbol.tracingUri.toString());
+        child.parent = undefined;
+    }
+
     public treeItemAdapter(): vscode.TreeItem {
         debugLog(`${this.symbol.name}.collapseState = ${this.collapsibleState}`, false);
 
         if (this.delimiterString) {
             const treeItem = new vscode.TreeItem('', vscode.TreeItemCollapsibleState.None);
             treeItem.description = this.delimiterString;
+            if (this._isSectionDelimiter) {
+                treeItem.iconPath = new vscode.ThemeIcon('kebab-horizontal');
+            }
+            return treeItem;
+        }
+        
+        if (this.isFoldPlaceholder) {
+            const treeItem = new vscode.TreeItem('... history folded', vscode.TreeItemCollapsibleState.None);
+            treeItem.iconPath = new vscode.ThemeIcon('history');
+            treeItem.command = {
+                command: 'navigationHistory.unfold',
+                title: 'unfold'
+            };
             return treeItem;
         }
 

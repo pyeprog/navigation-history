@@ -36,6 +36,24 @@ export function activate(context: vscode.ExtensionContext) {
 	);
 	context.subscriptions.push(pinCommand);
 
+	const deleteCommand = vscode.commands.registerCommand(
+		'navigationHistory.delete',
+		(arrival: Arrival) => {
+			arrivalCollection.delete(arrival);
+			arrivalHistoryProvider.refresh();
+		}
+	);
+	context.subscriptions.push(deleteCommand);
+
+	const deleteOtherTreesCommand = vscode.commands.registerCommand(
+		'navigationHistory.deleteOtherTrees',
+		(arrival: Arrival) => {
+			arrivalCollection.deleteOtherTrees(arrival);
+			arrivalHistoryProvider.refresh();
+		}
+	);
+	context.subscriptions.push(deleteOtherTreesCommand);
+
 	const unpinCommand = vscode.commands.registerCommand(
 		'navigationHistory.unpin',
 		(arrival: Arrival) => {
@@ -62,6 +80,24 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 	);
 	context.subscriptions.push(switchSortFieldCommand);
+	
+	const unfoldCommand = vscode.commands.registerCommand(
+		'navigationHistory.unfold',
+		() => {
+			arrivalCollection.isFolded = false;
+			arrivalHistoryProvider.refresh();
+		}
+	);
+	context.subscriptions.push(unfoldCommand);
+
+	const foldCommand = vscode.commands.registerCommand(
+		'navigationHistory.fold',
+		() => {
+			arrivalCollection.isFolded = true;
+			arrivalHistoryProvider.refresh();
+		}
+	);
+	context.subscriptions.push(foldCommand);
 }
 
 export function deactivate() { }
