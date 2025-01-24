@@ -67,6 +67,11 @@
         "command": "navigationHistory.fold",
         "title": "Fold",
         "icon": "$(fold)"
+      },
+      {
+        "command": "navigationHistory.unpinAll",
+        "title": "Unpin All",
+        "icon": "$(pinned)"
       }
     ],
     "menus": {
@@ -93,6 +98,11 @@
           "command": "navigationHistory.fold",
           "when": "view == navigationHistory",
           "title": "Fold"
+        },
+        {
+          "command": "navigationHistory.unpinAll",
+          "when": "view == navigationHistory",
+          "title": "Unpin All"
         }
       ],
       "view/item/context": [

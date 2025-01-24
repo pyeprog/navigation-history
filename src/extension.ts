@@ -5,6 +5,7 @@ import { ArrivalCollection } from './arrivalCollection';
 import { registerUpdatingHandler } from './eventHandlerRegister';
 import { ArrivalDecorationProvider } from './arrivalDecorationProvider';
 import { Arrival } from './arrival';
+import { ArrivalStatusBarItem } from './arrivalStatusBarItem';
 
 export function activate(context: vscode.ExtensionContext) {
 	const arrivalCollection = new ArrivalCollection();
@@ -17,8 +18,10 @@ export function activate(context: vscode.ExtensionContext) {
 
 	const arrivalDecorationProvider = new ArrivalDecorationProvider(arrivalCollection);
 	context.subscriptions.push(vscode.window.registerFileDecorationProvider(arrivalDecorationProvider));
+	
+	const arrivalStatusBarItem = new ArrivalStatusBarItem(arrivalCollection);
 
-	const updatingHandler = registerUpdatingHandler(treeView, arrivalHistoryProvider, arrivalRecorder, arrivalDecorationProvider);
+	const updatingHandler = registerUpdatingHandler(treeView, arrivalHistoryProvider, arrivalRecorder, arrivalDecorationProvider, arrivalStatusBarItem);
 	context.subscriptions.push(updatingHandler);
 
 	const cleanupCommand = vscode.commands.registerCommand(
@@ -63,6 +66,15 @@ export function activate(context: vscode.ExtensionContext) {
 	);
 	context.subscriptions.push(unpinCommand);
 
+	const unpinAllCommand = vscode.commands.registerCommand(
+		'navigationHistory.unpinAll',
+		() => {
+			arrivalCollection.forEach(arrival => { arrival.isPinned = false; });
+			arrivalHistoryProvider.refresh();
+		}
+	);
+	context.subscriptions.push(unpinAllCommand);
+
 	const switchSortStrategyCommand = vscode.commands.registerCommand(
 		'navigationHistory.switchSortOrder',
 		() => {
@@ -80,7 +92,7 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 	);
 	context.subscriptions.push(switchSortFieldCommand);
-	
+
 	const unfoldCommand = vscode.commands.registerCommand(
 		'navigationHistory.unfold',
 		() => {

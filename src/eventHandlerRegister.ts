@@ -4,6 +4,7 @@ import { ArrivalRecorder } from './arrivalRecorder';
 import { parseArrivalFromEditorState } from './util';
 import { Arrival } from './arrival';
 import { ArrivalDecorationProvider } from './arrivalDecorationProvider';
+import { ArrivalStatusBarItem } from './arrivalStatusBarItem';
 
 
 export function registerUpdatingHandler(
@@ -11,6 +12,7 @@ export function registerUpdatingHandler(
     arrivalHistoryProvider: ArrivalHistoryProvider,
     recorder: ArrivalRecorder,
     decorationProvider: ArrivalDecorationProvider,
+    statusBarItem: ArrivalStatusBarItem,
 ) {
 
     return vscode.window.onDidChangeTextEditorSelection(async (event) => {
@@ -27,6 +29,7 @@ export function registerUpdatingHandler(
 
         arrivalHistoryProvider.refresh();
         decorationProvider.refresh();
+        statusBarItem.refresh();
 
         treeView.reveal(savedArrival, { select: true, focus: false, expand: 3 });
     });

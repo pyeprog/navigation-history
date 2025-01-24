@@ -191,4 +191,8 @@ export class ArrivalCollection {
 
         return false;
     }
+    
+    forEach(callback: (arrival: Arrival) => void) {
+        this._arrivalList.forEach(callback);
+    }
 }
