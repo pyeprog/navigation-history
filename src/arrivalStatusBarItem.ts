@@ -5,18 +5,29 @@ import { Arrival } from './arrival';
 export class ArrivalStatusBarItem {
     private _statusBarItem: vscode.StatusBarItem;
     private _arrivalCollection: ArrivalCollection;
+    private _isEnabled: boolean = true;
 
     constructor(arrivalCollection: ArrivalCollection) {
         this._statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
         this._arrivalCollection = arrivalCollection;
     }
+    
+    enable() {
+        this._isEnabled = true;
+        this.refresh();
+    }
 
+    disable() {
+        this._isEnabled = false;
+        this._statusBarItem.hide();
+    }
+    
     refresh() {
         const hottestArrival = this._arrivalCollection.all().reduce((hottest: Arrival, current: Arrival) => {
             return current.selfEncoreCount >= hottest.selfEncoreCount ? current : hottest;
         });
 
-        if (!hottestArrival) {
+        if (!hottestArrival || !this._isEnabled) {
             this._statusBarItem.text = ``;
             this._statusBarItem.hide();
             return;

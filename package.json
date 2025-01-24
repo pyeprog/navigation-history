@@ -22,6 +22,53 @@
         }
       ]
     },
+    "configuration": {
+      "title": "Navigation History",
+      "properties": {
+        "navigationHistory.showStatusBar": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show the status bar item"
+        },
+        "navigationHistory.showFilenameInItemDescription": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show the filename in the item description"
+        },
+        "navigationHistory.showPositionInItemDescription": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show the position in the item description"
+        },
+        "navigationHistory.defaultSortField": {
+          "type": "string",
+          "enum": ["time", "encore"],
+          "default": "time", 
+          "description": "The default sort field - 'time' for chronological order or 'encore' for visit count"
+        },
+        "navigationHistory.defaultSortOrder": {
+          "type": "string",
+          "enum": ["ascending", "descending"],
+          "default": "descending",
+          "description": "The default sort order for the navigation history"
+        },
+        "navigationHistory.delimiterString": {
+          "type": "string",
+          "default": "",
+          "description": "the delimiter for each symbol tree in the view, empty string means no delimiter"
+        },
+        "navigationHistory.defaultFolding": {
+          "type": "boolean",
+          "default": true,
+          "description": "if true, the navigation history will only show limited number of symbols and fold the rest"
+        },
+        "navigationHistory.unpinnedItemFoldingThreshold": {
+          "type": "integer",
+          "default": 20,
+          "description": "the threshold of the symbol's checked count to be folded"
+        }
+      }
+    },
     "commands": [
       {
         "command": "navigationHistory.cleanup",

@@ -7,11 +7,25 @@ export type SortField = 'time' | 'encore';
 
 export class ArrivalCollection {
     private _arrivalList: Array<Arrival> = new Array();
-    private _sortOrder: SortOrder = 'descending';
-    private _sortField: SortField = 'time';
-    private _delimiterString: string = '';
-    public isFolded: boolean = true;
-    public unpinFoldThreshold: number = 20;
+    private _sortOrder: SortOrder;
+    private _sortField: SortField;
+    private _delimiterString: string;
+    public isFolded: boolean;
+    public unpinFoldThreshold: number;
+
+    constructor(options: {
+        sortOrder?: SortOrder,
+        sortField?: SortField,
+        delimiterString?: string,
+        isFolded?: boolean,
+        unpinFoldThreshold?: number,
+    } = {}) {
+        this._sortOrder = options.sortOrder ?? 'descending';
+        this._sortField = options.sortField ?? 'time';
+        this._delimiterString = options.delimiterString ?? '';
+        this.isFolded = options.isFolded ?? true;
+        this.unpinFoldThreshold = options.unpinFoldThreshold ?? 20;
+    }
 
     asList(): Arrival[] {
         function addDelimiter(arrivals: Arrival[], delimiterString: string) {
@@ -63,13 +77,13 @@ export class ArrivalCollection {
 
         const pinnedArrivals = sortArrivals(this._arrivalList, this._sortOrder, this._sortField).filter(arrival => arrival.isPinned);
         const orderIcon = this._sortOrder === 'ascending' ? '↑' : '↓';
-        const foldStatus = this.isFolded ? `${this.unpinFoldThreshold}` : '◼︎';
+        const foldStatus = this.isFolded ? `${this.unpinFoldThreshold}` : 'all';
         const delimiterInfo: string[] = [
             ...(pinnedArrivals.length > 0 ? [`↑ ${pinnedArrivals.length} pinned`] : []),
             `↓ ${unpinnedArrivals.length} unpinned`,
             `sorted by (${this._sortField})`,
             `order (${orderIcon})`,
-            `fold (${foldStatus})`,
+            `show (${foldStatus})`,
         ];
         const sectionDelimiters = Arrival.createDelimiter(delimiterInfo.join(' | '), true);
 
@@ -81,14 +95,24 @@ export class ArrivalCollection {
 
         return result;
     }
-    
+
     switchSortOrder(): ArrivalCollection {
         this._sortOrder = this._sortOrder === 'ascending' ? 'descending' : 'ascending';
         return this;
     }
 
+    setSortOrder(sortOrder: SortOrder): ArrivalCollection {
+        this._sortOrder = sortOrder;
+        return this;
+    }
+
     switchSortField(): ArrivalCollection {
         this._sortField = this._sortField === 'time' ? 'encore' : 'time';
+        return this;
+    }
+
+    setSortField(sortField: SortField): ArrivalCollection {
+        this._sortField = sortField;
         return this;
     }
 
@@ -191,7 +215,7 @@ export class ArrivalCollection {
 
         return false;
     }
-    
+
     forEach(callback: (arrival: Arrival) => void) {
         this._arrivalList.forEach(callback);
     }

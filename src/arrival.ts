@@ -113,7 +113,7 @@ export class Arrival implements ArrivalIterface {
         child.parent = undefined;
     }
 
-    public treeItemAdapter(): vscode.TreeItem {
+    public treeItemAdapter(showFilename: boolean = true, showPosition: boolean = true): vscode.TreeItem {
         debugLog(`${this.symbol.name}.collapseState = ${this.collapsibleState}`, false);
 
         if (this.delimiterString) {
@@ -138,17 +138,22 @@ export class Arrival implements ArrivalIterface {
         const symbolDisplayName = (this.symbol.kind === vscode.SymbolKind.Method) ? `.${this.symbol.name}` : this.symbol.name;
         let treeItem = new vscode.TreeItem(symbolDisplayName, this.collapsibleState);
 
-        const uriFsPath = this.symbol.uri.fsPath;
-        const filename = uriFsPath.split('/').pop();
+        const workspacePath: string = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath ?? '';
+        const relativeFilePath: string = this.symbol.uri.fsPath.slice(workspacePath.length);
+        const filenameInDescription = showFilename ? relativeFilePath.split('/').pop() : '';
         const range = this.symbol.range;
-        // Position.line is 0-indexed in vscode, so we need to add 1 to make it 1-indexed, so is Position.character
-        const lineNum = range.start.line + 1;
-        const columnNum = range.start.character + 1;
+        const lineNumInDescription = range.start.line + 1;
+        const columnNumInDescription = range.start.character + 1;
+        const positionInDescription = showPosition ? ` ${lineNumInDescription}:${columnNumInDescription}` : '';
 
+        // there are 3 kinds of arrival as for contextValue, extension will use different contextValue to determine the UI behavior
+        // arrival: the normal arrival, this includes all the arrival
+        // arrivalRoot: the root arrival, this is the root of the arrival tree
+        // arrivalRootPinned: the root arrival and it is pinned
         treeItem.contextValue = `arrival${!this.parent ? 'Root' : ''}${this.isPinned ? 'Pinned' : ''}`;
         treeItem.iconPath = productIconPath(this.symbol.kind);
-        treeItem.description = `${filename} ${lineNum}:${columnNum}`;
-        treeItem.tooltip = uriFsPath;
+        treeItem.description = `${filenameInDescription}${positionInDescription}`;
+        treeItem.tooltip = relativeFilePath;
         treeItem.resourceUri = this.symbol.tracingUri;
         treeItem.command = {
             command: 'vscode.open',

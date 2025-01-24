@@ -1,14 +1,23 @@
 import * as vscode from 'vscode';
 import { ArrivalHistoryProvider } from './arrivalHistoryProvider';
 import { ArrivalRecorder } from './arrivalRecorder';
-import { ArrivalCollection } from './arrivalCollection';
-import { registerUpdatingHandler } from './eventHandlerRegister';
+import { ArrivalCollection, SortField, SortOrder } from './arrivalCollection';
+import { registerConfigChangeHandler, registerUpdatingHandler } from './eventHandlerRegister';
 import { ArrivalDecorationProvider } from './arrivalDecorationProvider';
 import { Arrival } from './arrival';
 import { ArrivalStatusBarItem } from './arrivalStatusBarItem';
 
 export function activate(context: vscode.ExtensionContext) {
-	const arrivalCollection = new ArrivalCollection();
+	const config = vscode.workspace.getConfiguration('navigationHistory');
+
+	const arrivalCollection = new ArrivalCollection({
+		delimiterString: config.get('delimiterString') as string,
+		sortField: config.get('defaultSortField') as SortField,
+		sortOrder: config.get('defaultSortOrder') as SortOrder,
+		unpinFoldThreshold: config.get('unpinFoldThreshold') as number,
+		isFolded: config.get('defaultFolding') as boolean,
+	});
+
 	const arrivalRecorder = new ArrivalRecorder(arrivalCollection);
 	const arrivalHistoryProvider = new ArrivalHistoryProvider(arrivalCollection);
 	const treeView = vscode.window.createTreeView('navigationHistory', {
@@ -18,12 +27,15 @@ export function activate(context: vscode.ExtensionContext) {
 
 	const arrivalDecorationProvider = new ArrivalDecorationProvider(arrivalCollection);
 	context.subscriptions.push(vscode.window.registerFileDecorationProvider(arrivalDecorationProvider));
-	
+
 	const arrivalStatusBarItem = new ArrivalStatusBarItem(arrivalCollection);
+	arrivalStatusBarItem.dispose(context);
 
 	const updatingHandler = registerUpdatingHandler(treeView, arrivalHistoryProvider, arrivalRecorder, arrivalDecorationProvider, arrivalStatusBarItem);
 	context.subscriptions.push(updatingHandler);
 
+	const configChangeHandler = registerConfigChangeHandler(arrivalCollection, arrivalHistoryProvider, arrivalStatusBarItem);
+	context.subscriptions.push(configChangeHandler);
 	const cleanupCommand = vscode.commands.registerCommand(
 		'navigationHistory.cleanup',
 		() => arrivalHistoryProvider.cleanup()
