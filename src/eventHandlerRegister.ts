@@ -40,6 +40,7 @@ export function registerUpdatingHandler(
 export function registerConfigChangeHandler(
     arrivalCollection: ArrivalCollection,
     arrivalHistoryProvider: ArrivalHistoryProvider,
+    arrivalDecorationProvider: ArrivalDecorationProvider,
     arrivalStatusBarItem: ArrivalStatusBarItem,
 ) {
     return vscode.workspace.onDidChangeConfiguration((event) => {
@@ -83,6 +84,10 @@ export function registerConfigChangeHandler(
             const unpinFoldThreshold = vscode.workspace.getConfiguration('navigationHistory').get('unpinnedItemFoldingThreshold');
             arrivalCollection.unpinFoldThreshold = unpinFoldThreshold as number;
             arrivalHistoryProvider.refresh();
+
+        } else if (event.affectsConfiguration('navigationHistory.colorize')) {
+            const doColorize = vscode.workspace.getConfiguration('navigationHistory').get('colorize');
+            arrivalDecorationProvider.setColorize(doColorize as boolean);
         }
     });
 }

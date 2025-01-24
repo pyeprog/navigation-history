@@ -66,6 +66,11 @@
           "type": "integer",
           "default": 20,
           "description": "the threshold of the symbol's checked count to be folded"
+        },
+        "navigationHistory.colorize": {
+          "type": "boolean",
+          "default": true,
+          "description": "if true, the navigation history will colorize the symbol based on the visit count, the bars are 20 and 60 visitings"
         }
       }
     },

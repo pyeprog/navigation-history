@@ -26,6 +26,7 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(treeView);
 
 	const arrivalDecorationProvider = new ArrivalDecorationProvider(arrivalCollection);
+	arrivalDecorationProvider.setColorize(config.get('colorize') as boolean);
 	context.subscriptions.push(vscode.window.registerFileDecorationProvider(arrivalDecorationProvider));
 
 	const arrivalStatusBarItem = new ArrivalStatusBarItem(arrivalCollection);
@@ -34,7 +35,7 @@ export function activate(context: vscode.ExtensionContext) {
 	const updatingHandler = registerUpdatingHandler(treeView, arrivalHistoryProvider, arrivalRecorder, arrivalDecorationProvider, arrivalStatusBarItem);
 	context.subscriptions.push(updatingHandler);
 
-	const configChangeHandler = registerConfigChangeHandler(arrivalCollection, arrivalHistoryProvider, arrivalStatusBarItem);
+	const configChangeHandler = registerConfigChangeHandler(arrivalCollection, arrivalHistoryProvider, arrivalDecorationProvider, arrivalStatusBarItem);
 	context.subscriptions.push(configChangeHandler);
 	const cleanupCommand = vscode.commands.registerCommand(
 		'navigationHistory.cleanup',
