@@ -62,7 +62,7 @@ export class ArrivalCollection {
             return arrivalWithIndex.map(([arrival, _]) => arrival);
         }
 
-        const originUnpinnedArrivals = sortArrivals(this._arrivalList, this._sortOrder, this._sortField).filter(arrival => !arrival.isPinned);
+        const originUnpinnedArrivals = sortArrivals(this._arrivalList.filter(arrival => !arrival.isPinned), this._sortOrder, this._sortField);
         const shortenUnpinnedArrivals = this.isFolded ? originUnpinnedArrivals.slice(0, this.unpinFoldThreshold) : originUnpinnedArrivals;
         let unpinnedArrivals: Arrival[];
         if (originUnpinnedArrivals.length > this.unpinFoldThreshold && this.isFolded) {
@@ -75,7 +75,7 @@ export class ArrivalCollection {
             unpinnedArrivals = originUnpinnedArrivals;
         }
 
-        const pinnedArrivals = sortArrivals(this._arrivalList, this._sortOrder, this._sortField).filter(arrival => arrival.isPinned);
+        const pinnedArrivals = sortArrivals(this._arrivalList.filter(arrival => arrival.isPinned), this._sortOrder, this._sortField);
         const orderIcon = this._sortOrder === 'ascending' ? '↑' : '↓';
         const foldStatus = this.isFolded ? `${this.unpinFoldThreshold}` : 'all';
         const delimiterInfo: string[] = [
