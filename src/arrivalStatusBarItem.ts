@@ -11,7 +11,7 @@ export class ArrivalStatusBarItem {
         this._statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
         this._arrivalCollection = arrivalCollection;
     }
-    
+
     enable() {
         this._isEnabled = true;
         this.refresh();
@@ -21,9 +21,9 @@ export class ArrivalStatusBarItem {
         this._isEnabled = false;
         this._statusBarItem.hide();
     }
-    
+
     refresh() {
-        const hottestArrival = this._arrivalCollection.all().reduce((hottest: Arrival, current: Arrival) => {
+        const hottestArrival = this._arrivalCollection.allArrivals().reduce((hottest: Arrival, current: Arrival) => {
             return current.selfEncoreCount >= hottest.selfEncoreCount ? current : hottest;
         });
 

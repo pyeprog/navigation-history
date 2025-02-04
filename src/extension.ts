@@ -1,32 +1,40 @@
 import * as vscode from 'vscode';
 import { ArrivalHistoryProvider } from './arrivalHistoryProvider';
 import { ArrivalRecorder } from './arrivalRecorder';
-import { ArrivalCollection, SortField, SortOrder } from './arrivalCollection';
+import { ArrivalCollection } from './arrivalCollection';
 import { registerConfigChangeHandler, registerUpdatingHandler } from './eventHandlerRegister';
 import { ArrivalDecorationProvider } from './arrivalDecorationProvider';
-import { Arrival } from './arrival';
+import { Arrival, SortField, SortOrder } from './arrival';
 import { ArrivalStatusBarItem } from './arrivalStatusBarItem';
 
 export function activate(context: vscode.ExtensionContext) {
 	const config = vscode.workspace.getConfiguration('navigationHistory');
+	const reprOptions = {
+		delimiterString: config.get('delimiter.delimiterString') as string,
+		enableDelimiter: config.get('delimiter.enableDelimiter') as boolean,
+		sortField: config.get('sorting.defaultSortField') as SortField,
+		sortOrder: config.get('sorting.defaultSortOrder') as SortOrder,
+		unpinFoldThreshold: config.get('folding.unpinnedItemFoldingThreshold') as number,
+		isFolded: config.get('folding.defaultFolding') as boolean,
+		showFilename: config.get('item.showFilenameInItemDescription') as boolean,
+		showPosition: config.get('item.showPositionInItemDescription') as boolean,
+	};
 
-	const arrivalCollection = new ArrivalCollection({
-		delimiterString: config.get('delimiterString') as string,
-		sortField: config.get('defaultSortField') as SortField,
-		sortOrder: config.get('defaultSortOrder') as SortOrder,
-		unpinFoldThreshold: config.get('unpinFoldThreshold') as number,
-		isFolded: config.get('defaultFolding') as boolean,
-	});
+	const arrivalCollection = new ArrivalCollection();
 
 	const arrivalRecorder = new ArrivalRecorder(arrivalCollection);
-	const arrivalHistoryProvider = new ArrivalHistoryProvider(arrivalCollection);
+	const arrivalHistoryProvider = new ArrivalHistoryProvider(arrivalCollection, reprOptions);
 	const treeView = vscode.window.createTreeView('navigationHistory', {
 		treeDataProvider: arrivalHistoryProvider,
 	});
 	context.subscriptions.push(treeView);
 
-	const arrivalDecorationProvider = new ArrivalDecorationProvider(arrivalCollection);
-	arrivalDecorationProvider.setColorize(config.get('colorize') as boolean);
+	const colorOptions = {
+		colorize: config.get('color.enableColorizing') as boolean,
+		warmColorThreshold: config.get('color.warmColorThreshold') as number,
+		hotColorThreshold: config.get('color.hotColorThreshold') as number,
+	};
+	const arrivalDecorationProvider = new ArrivalDecorationProvider(arrivalCollection, colorOptions);
 	context.subscriptions.push(vscode.window.registerFileDecorationProvider(arrivalDecorationProvider));
 
 	const arrivalStatusBarItem = new ArrivalStatusBarItem(arrivalCollection);
@@ -35,7 +43,7 @@ export function activate(context: vscode.ExtensionContext) {
 	const updatingHandler = registerUpdatingHandler(treeView, arrivalHistoryProvider, arrivalRecorder, arrivalDecorationProvider, arrivalStatusBarItem);
 	context.subscriptions.push(updatingHandler);
 
-	const configChangeHandler = registerConfigChangeHandler(arrivalCollection, arrivalHistoryProvider, arrivalDecorationProvider, arrivalStatusBarItem);
+	const configChangeHandler = registerConfigChangeHandler(arrivalHistoryProvider, arrivalDecorationProvider, arrivalStatusBarItem);
 	context.subscriptions.push(configChangeHandler);
 	const cleanupCommand = vscode.commands.registerCommand(
 		'navigationHistory.cleanup',
@@ -91,8 +99,10 @@ export function activate(context: vscode.ExtensionContext) {
 	const switchSortStrategyCommand = vscode.commands.registerCommand(
 		'navigationHistory.switchSortOrder',
 		() => {
-			arrivalCollection.switchSortOrder();
-			arrivalHistoryProvider.refresh();
+			const currentSortOrder = arrivalHistoryProvider.getReprOptions().sortOrder;
+			arrivalHistoryProvider.updateReprOptions({
+				sortOrder: currentSortOrder === 'ascending' ? 'descending' : 'ascending',
+			});
 		}
 	);
 	context.subscriptions.push(switchSortStrategyCommand);
@@ -100,8 +110,10 @@ export function activate(context: vscode.ExtensionContext) {
 	const switchSortFieldCommand = vscode.commands.registerCommand(
 		'navigationHistory.switchSortField',
 		() => {
-			arrivalCollection.switchSortField();
-			arrivalHistoryProvider.refresh();
+			const currentSortField = arrivalHistoryProvider.getReprOptions().sortField;
+			arrivalHistoryProvider.updateReprOptions({
+				sortField: currentSortField === 'time' ? 'encore' : 'time',
+			});
 		}
 	);
 	context.subscriptions.push(switchSortFieldCommand);
@@ -109,8 +121,9 @@ export function activate(context: vscode.ExtensionContext) {
 	const unfoldCommand = vscode.commands.registerCommand(
 		'navigationHistory.unfold',
 		() => {
-			arrivalCollection.isFolded = false;
-			arrivalHistoryProvider.refresh();
+			arrivalHistoryProvider.updateReprOptions({
+				isFolded: false,
+			});
 		}
 	);
 	context.subscriptions.push(unfoldCommand);
@@ -118,8 +131,9 @@ export function activate(context: vscode.ExtensionContext) {
 	const foldCommand = vscode.commands.registerCommand(
 		'navigationHistory.fold',
 		() => {
-			arrivalCollection.isFolded = true;
-			arrivalHistoryProvider.refresh();
+			arrivalHistoryProvider.updateReprOptions({
+				isFolded: true,
+			});
 		}
 	);
 	context.subscriptions.push(foldCommand);

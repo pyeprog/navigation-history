@@ -4,6 +4,13 @@ All notable changes to the "navigation-history" extension will be documented in 
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [1.0.1] - 2025-02-03
+
+### Added
+
+- make colorizing customizable.
+- fix some bugs.
+
 ## [1.0.0] - 2025-01-24
 
 ### Added

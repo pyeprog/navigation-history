@@ -1,123 +1,13 @@
 import * as vscode from 'vscode';
-import { Arrival } from "./arrival";
-
-export type SortStrategy = 'latestFirst' | 'oldestFirst' | 'hottestFirst';
-export type SortOrder = 'ascending' | 'descending';
-export type SortField = 'time' | 'encore';
+import { Arrival, ArrivalReprOptions } from "./arrival";
 
 export class ArrivalCollection {
     private _arrivalList: Array<Arrival> = new Array();
-    private _sortOrder: SortOrder;
-    private _sortField: SortField;
-    private _delimiterString: string;
-    public isFolded: boolean;
-    public unpinFoldThreshold: number;
 
-    constructor(options: {
-        sortOrder?: SortOrder,
-        sortField?: SortField,
-        delimiterString?: string,
-        isFolded?: boolean,
-        unpinFoldThreshold?: number,
-    } = {}) {
-        this._sortOrder = options.sortOrder ?? 'descending';
-        this._sortField = options.sortField ?? 'time';
-        this._delimiterString = options.delimiterString ?? '';
-        this.isFolded = options.isFolded ?? true;
-        this.unpinFoldThreshold = options.unpinFoldThreshold ?? 20;
-    }
-
-    asList(): Arrival[] {
-        function addDelimiter(arrivals: Arrival[], delimiterString: string) {
-            if (delimiterString.length === 0) {
-                return arrivals;
-            }
-
-            const delimiter = Arrival.createDelimiter(delimiterString);
-            const result: Arrival[] = [];
-            for (const arrival of arrivals) {
-                result.push(arrival);
-                result.push(delimiter);
-            }
-            // pop the delimiter at the end
-            result.pop();
-            return result;
-        }
-
-        function sortArrivals(arrivals: Arrival[], sortOrder: SortOrder, sortBy: SortField): Arrival[] {
-            function compare(value1: number, value2: number): number {
-                return sortOrder === 'ascending' ? value1 - value2 : value2 - value1;
-            }
-
-            type ArrivalWithIndex = [Arrival, number];
-            function valueOf(arrivalWithIndex: ArrivalWithIndex): number {
-                const [arrival, index] = arrivalWithIndex;
-                return sortBy === 'time' ? index : arrival.treeEncoreCount;
-            }
-
-            const arrivalWithIndex: ArrivalWithIndex[] = arrivals.map((arrival, index) => ([arrival, index]));
-
-            arrivalWithIndex.sort((tuple1, tuple2) => compare(valueOf(tuple1), valueOf(tuple2)));
-
-            return arrivalWithIndex.map(([arrival, _]) => arrival);
-        }
-
-        const originUnpinnedArrivals = sortArrivals(this._arrivalList.filter(arrival => !arrival.isPinned), this._sortOrder, this._sortField);
-        const shortenUnpinnedArrivals = this.isFolded ? originUnpinnedArrivals.slice(0, this.unpinFoldThreshold) : originUnpinnedArrivals;
-        let unpinnedArrivals: Arrival[];
-        if (originUnpinnedArrivals.length > this.unpinFoldThreshold && this.isFolded) {
-            if (this._sortOrder === 'ascending') {
-                unpinnedArrivals = [Arrival.createFoldPlaceholder(), ...shortenUnpinnedArrivals];
-            } else {
-                unpinnedArrivals = [...shortenUnpinnedArrivals, Arrival.createFoldPlaceholder()];
-            }
-        } else {
-            unpinnedArrivals = originUnpinnedArrivals;
-        }
-
-        const pinnedArrivals = sortArrivals(this._arrivalList.filter(arrival => arrival.isPinned), this._sortOrder, this._sortField);
-        const orderIcon = this._sortOrder === 'ascending' ? '↑' : '↓';
-        const foldStatus = this.isFolded ? `${this.unpinFoldThreshold}` : 'all';
-        const delimiterInfo: string[] = [
-            ...(pinnedArrivals.length > 0 ? [`↑ ${pinnedArrivals.length} pinned`] : []),
-            `↓ ${unpinnedArrivals.length} unpinned`,
-            `sorted by (${this._sortField})`,
-            `order (${orderIcon})`,
-            `show (${foldStatus})`,
-        ];
-        const sectionDelimiters = Arrival.createDelimiter(delimiterInfo.join(' | '), true);
-
-        const result = [
-            ...addDelimiter(pinnedArrivals, this._delimiterString),
-            sectionDelimiters,
-            ...addDelimiter(unpinnedArrivals, this._delimiterString)
-        ];
-
-        return result;
-    }
-
-    switchSortOrder(): ArrivalCollection {
-        this._sortOrder = this._sortOrder === 'ascending' ? 'descending' : 'ascending';
-        return this;
-    }
-
-    setSortOrder(sortOrder: SortOrder): ArrivalCollection {
-        this._sortOrder = sortOrder;
-        return this;
-    }
-
-    switchSortField(): ArrivalCollection {
-        this._sortField = this._sortField === 'time' ? 'encore' : 'time';
-        return this;
-    }
-
-    setSortField(sortField: SortField): ArrivalCollection {
-        this._sortField = sortField;
-        return this;
-    }
-
-    setDelimiterString(delimiterString: string): ArrivalCollection {
-        this._delimiterString = delimiterString;
+    setReprOptions(representationOptions: ArrivalReprOptions): ArrivalCollection {
+        this.allArrivals().forEach(arrival => {
+            arrival.representationOptions = representationOptions;
+        });
         return this;
     }
 
@@ -193,7 +83,7 @@ export class ArrivalCollection {
         return defaultValue;
     }
 
-    all(): Arrival[] {
+    allArrivals(): Arrival[] {
         const result: Arrival[] = [];
 
         function addArrivalRecursively(arrival: Arrival) {
@@ -218,5 +108,13 @@ export class ArrivalCollection {
 
     forEach(callback: (arrival: Arrival) => void) {
         this._arrivalList.forEach(callback);
+    }
+
+    pinnedArrivals(): Arrival[] {
+        return this._arrivalList.filter(arrival => arrival.isPinned);
+    }
+
+    unpinnedArrivals(): Arrival[] {
+        return this._arrivalList.filter(arrival => !arrival.isPinned);
     }
 }

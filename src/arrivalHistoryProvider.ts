@@ -1,18 +1,19 @@
 import * as vscode from 'vscode';
-import { Arrival } from './arrival';
+import { Arrival, TreeItemInterface } from './arrival';
 import { ArrivalCollection } from './arrivalCollection';
+import { toTreeItemCollection, TreeViewReprOptions } from './treeItemCollection';
 
-export class ArrivalHistoryProvider implements vscode.TreeDataProvider<Arrival> {
-	private _onDidChangeTreeData: vscode.EventEmitter<Arrival | undefined | null | void> = new vscode.EventEmitter<Arrival | undefined | null | void>();
-	readonly onDidChangeTreeData?: vscode.Event<void | Arrival | Arrival[] | null | undefined> | undefined = this._onDidChangeTreeData.event;
+export class ArrivalHistoryProvider implements vscode.TreeDataProvider<TreeItemInterface> {
+	private _onDidChangeTreeData: vscode.EventEmitter<TreeItemInterface | undefined | null | void> = new vscode.EventEmitter<TreeItemInterface | undefined | null | void>();
+	readonly onDidChangeTreeData?: vscode.Event<void | TreeItemInterface | TreeItemInterface[] | null | undefined> | undefined = this._onDidChangeTreeData.event;
 	private arrivalCollection: ArrivalCollection;
-	private _showFilename: boolean = true;
-	private _showPosition: boolean = true;
+	private reprOptions: TreeViewReprOptions;
 
-	constructor(arrivalCollection: ArrivalCollection) {
+	constructor(arrivalCollection: ArrivalCollection, reprOptions: TreeViewReprOptions) {
 		this.arrivalCollection = arrivalCollection;
+		this.reprOptions = reprOptions;
 	}
-	
+
 	refresh() {
 		this._onDidChangeTreeData.fire();
 	}
@@ -22,37 +23,49 @@ export class ArrivalHistoryProvider implements vscode.TreeDataProvider<Arrival> 
 		this.arrivalCollection.clear();
 		this.refresh();
 	}
-	
-	setShowFilename(showFilename: boolean) {
-		this._showFilename = showFilename;
+
+	getReprOptions(): TreeViewReprOptions {
+		return this.reprOptions;
+	}
+
+	setReprOptions(options: TreeViewReprOptions) {
+		this.reprOptions = options;
 		this.refresh();
 		return this;
 	}
 
-	setShowPosition(showPosition: boolean) {
-		this._showPosition = showPosition;
+	updateReprOptions(options: Partial<TreeViewReprOptions>) {
+		this.reprOptions = { ...this.reprOptions, ...options };
 		this.refresh();
 		return this;
 	}
 
-	getTreeItem(element: Arrival): vscode.TreeItem | Thenable<vscode.TreeItem> {
-		return element.treeItemAdapter(this._showFilename, this._showPosition);
+	getTreeItem(element: TreeItemInterface): vscode.TreeItem | Thenable<vscode.TreeItem> {
+		return element.toTreeItem();
 	}
 
-	private getInitialChildren(): Arrival[] {
-		return this.arrivalCollection.asList();
+	private getInitialChildren(): TreeItemInterface[] {
+		return toTreeItemCollection(this.arrivalCollection, this.reprOptions);
 	}
 
-	getChildren(element?: Arrival | undefined): vscode.ProviderResult<Arrival[]> {
+	getChildren(element?: TreeItemInterface | undefined): vscode.ProviderResult<TreeItemInterface[]> {
 		if (!element) {
 			return this.getInitialChildren();
 		}
 
-		return element.children;
+		if (element instanceof Arrival) {
+			return element.children;
+		}
+
+		return [];
 	}
 
-	getParent(element: Arrival): vscode.ProviderResult<Arrival | null | undefined> {
-		return element.parent;
+	getParent(element: TreeItemInterface): vscode.ProviderResult<TreeItemInterface | null | undefined> {
+		if (element instanceof Arrival) {
+			return element.parent;
+		}
+
+		return null;
 	}
 }
 

@@ -2,45 +2,117 @@ import * as vscode from 'vscode';
 import { TracableSymbol } from './tracableSymbol';
 import { debugLog } from './debug';
 import { productIconPath } from './util';
-import assert from 'assert';
 
+export interface TreeItemInterface {
+    toTreeItem: () => vscode.TreeItem;
+}
 
-export class Arrival implements ArrivalIterface {
+export interface ArrivalObjectInterface {
+    symbol: TracableSymbol;
+    word: string;
+    children?: ArrivalObjectInterface[];
+}
+
+export class Delimiter implements TreeItemInterface {
+    constructor(public readonly representation: string) { }
+
+    toTreeItem(): vscode.TreeItem {
+        const treeItem = new vscode.TreeItem('', vscode.TreeItemCollapsibleState.None);
+        treeItem.description = this.representation;
+        treeItem.contextValue = 'delimiter';
+        return treeItem;
+    }
+}
+
+export type SortStrategy = 'latestFirst' | 'oldestFirst' | 'hottestFirst';
+export type SortOrder = 'ascending' | 'descending';
+export type SortField = 'time' | 'encore';
+export type SectionDelimiterReprOptions = {
+    sortOrder: SortOrder;
+    sortField: SortField;
+    isFolded: boolean;
+    unpinFoldThreshold: number;
+}
+
+export class SectionDelimiter implements TreeItemInterface {
+    public representation: string;
+
+    constructor(
+        pinnedCount: number,
+        unpinnedCount: number,
+        reprOptions: SectionDelimiterReprOptions
+    ) {
+        const orderIcon = reprOptions.sortOrder === 'ascending' ? '↑' : '↓';
+        const foldStatus = reprOptions.isFolded ? `${reprOptions.unpinFoldThreshold}` : 'all';
+        const delimiterInfo: string[] = [
+            ...(pinnedCount > 0 ? [`↑ ${pinnedCount} pinned`] : []),
+            `↓ ${unpinnedCount} unpinned`,
+            `sorted by (${reprOptions.sortField})`,
+            `order (${orderIcon})`,
+            `show (${foldStatus})`,
+        ];
+
+        this.representation = delimiterInfo.join(' | ');
+    }
+
+    toTreeItem(): vscode.TreeItem {
+        const treeItem = new vscode.TreeItem('', vscode.TreeItemCollapsibleState.None);
+        treeItem.description = this.representation;
+        treeItem.iconPath = new vscode.ThemeIcon('kebab-horizontal');
+        treeItem.contextValue = 'sectionDelimiter';
+        return treeItem;
+    }
+}
+
+export class FoldPlaceholder implements TreeItemInterface {
+    constructor() { }
+
+    toTreeItem(): vscode.TreeItem {
+        const treeItem = new vscode.TreeItem('... history folded', vscode.TreeItemCollapsibleState.None);
+        treeItem.iconPath = new vscode.ThemeIcon('history');
+        treeItem.command = {
+            command: 'navigationHistory.unfold',
+            title: 'unfold'
+        };
+        treeItem.contextValue = 'foldPlaceholder';
+        return treeItem;
+    }
+}
+
+export interface ArrivalReprOptions {
+    showFilename: boolean;
+    showPosition: boolean;
+}
+
+export class Arrival implements ArrivalObjectInterface, TreeItemInterface {
     public symbol: TracableSymbol;
     public word: string;
     public children: Arrival[] = [];
     public parent: Arrival | undefined | null = null;
     public isPinned: boolean = false;
     private _encoreCount: number;
+    public representationOptions: ArrivalReprOptions;
 
-    // for UI, the priority is delimiterString > isFoldPlaceholder, if option of higher priority is set, lower priority one is ignored
-    public delimiterString: string = '';
-    private _isSectionDelimiter: boolean = false;
-    public isFoldPlaceholder: boolean = false;
-
+    /**
+     * 
+     * @param symbol which symbol does this arrival represent
+     * @param word the word under current cursor of this arrival
+     * @param isDelimiter whether this arrival is a delimiter
+     */
     constructor(
         symbol: TracableSymbol,
         word: string,
+        representationOptions: ArrivalReprOptions = {
+            showFilename: true,
+            showPosition: true,
+        }
     ) {
         this.symbol = symbol;
         this.word = word;
         this._encoreCount = 0;
+        this.representationOptions = representationOptions;
     }
 
-    static createDelimiter(delimiterString: string, isSectionDelimiter: boolean = false): Arrival {
-        assert(delimiterString, 'delimiterString is required to be a non-empty string');
-        const delimiter = new Arrival(TracableSymbol.empty(), '');
-        delimiter.delimiterString = delimiterString;
-        delimiter._isSectionDelimiter = isSectionDelimiter;
-        return delimiter;
-    }
-    
-    static createFoldPlaceholder(): Arrival {
-        const placeholder = new Arrival(TracableSymbol.empty(), '');
-        placeholder.isFoldPlaceholder = true;
-        return placeholder;
-    }
-    
     get root(): Arrival {
         let root: Arrival = this;
         while (root.parent) {
@@ -55,7 +127,7 @@ export class Arrival implements ArrivalIterface {
     get selfEncoreCount() {
         return this._encoreCount;
     }
-    
+
     /**
      * The total encore count of the arrival and all its children.
      */
@@ -74,7 +146,7 @@ export class Arrival implements ArrivalIterface {
         return this.children?.length > 0 ? vscode.TreeItemCollapsibleState.Expanded : vscode.TreeItemCollapsibleState.None;
     }
 
-    static createFrom(arrivalInfo: ArrivalIterface): Arrival {
+    static createFrom(arrivalInfo: ArrivalObjectInterface): Arrival {
         const arrival = new Arrival(arrivalInfo.symbol, arrivalInfo.word);
 
         const children = (arrivalInfo.children || []).map(child => Arrival.createFrom(child));
@@ -84,16 +156,12 @@ export class Arrival implements ArrivalIterface {
         return arrival;
     }
 
-    isOnSameSymbolOf(other: ArrivalIterface): boolean {
+    isOnSameSymbolOf(other: ArrivalObjectInterface): boolean {
         return this.symbol.isEqual(other.symbol);
     }
 
     setParent(parent: Arrival): Arrival {
         this.parent = parent;
-        if (!parent.children.find(child => child.isOnSameSymbolOf(this))) {
-            parent.addChild(this);
-        }
-
         return this;
     }
 
@@ -113,38 +181,19 @@ export class Arrival implements ArrivalIterface {
         child.parent = undefined;
     }
 
-    public treeItemAdapter(showFilename: boolean = true, showPosition: boolean = true): vscode.TreeItem {
+    public toTreeItem(): vscode.TreeItem {
         debugLog(`${this.symbol.name}.collapseState = ${this.collapsibleState}`, false);
-
-        if (this.delimiterString) {
-            const treeItem = new vscode.TreeItem('', vscode.TreeItemCollapsibleState.None);
-            treeItem.description = this.delimiterString;
-            if (this._isSectionDelimiter) {
-                treeItem.iconPath = new vscode.ThemeIcon('kebab-horizontal');
-            }
-            return treeItem;
-        }
-        
-        if (this.isFoldPlaceholder) {
-            const treeItem = new vscode.TreeItem('... history folded', vscode.TreeItemCollapsibleState.None);
-            treeItem.iconPath = new vscode.ThemeIcon('history');
-            treeItem.command = {
-                command: 'navigationHistory.unfold',
-                title: 'unfold'
-            };
-            return treeItem;
-        }
 
         const symbolDisplayName = (this.symbol.kind === vscode.SymbolKind.Method) ? `.${this.symbol.name}` : this.symbol.name;
         let treeItem = new vscode.TreeItem(symbolDisplayName, this.collapsibleState);
 
         const workspacePath: string = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath ?? '';
         const relativeFilePath: string = this.symbol.uri.fsPath.slice(workspacePath.length);
-        const filenameInDescription = showFilename ? relativeFilePath.split('/').pop() : '';
+        const filenameInDescription = this.representationOptions.showFilename ? relativeFilePath.split('/').pop() : '';
         const range = this.symbol.range;
         const lineNumInDescription = range.start.line + 1;
         const columnNumInDescription = range.start.character + 1;
-        const positionInDescription = showPosition ? ` ${lineNumInDescription}:${columnNumInDescription}` : '';
+        const positionInDescription = this.representationOptions.showPosition ? ` ${lineNumInDescription}:${columnNumInDescription}` : '';
 
         // there are 3 kinds of arrival as for contextValue, extension will use different contextValue to determine the UI behavior
         // arrival: the normal arrival, this includes all the arrival
@@ -168,11 +217,5 @@ export class Arrival implements ArrivalIterface {
 
         return treeItem;
     }
-}
-
-export interface ArrivalIterface {
-    symbol: TracableSymbol;
-    word: string;
-    children?: ArrivalIterface[];
 }
 

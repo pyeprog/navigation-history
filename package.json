@@ -25,52 +25,67 @@
     "configuration": {
       "title": "Navigation History",
       "properties": {
-        "navigationHistory.showStatusBar": {
-          "type": "boolean",
-          "default": true,
-          "description": "Show the status bar item"
-        },
-        "navigationHistory.showFilenameInItemDescription": {
-          "type": "boolean",
-          "default": true,
-          "description": "Show the filename in the item description"
-        },
-        "navigationHistory.showPositionInItemDescription": {
-          "type": "boolean",
-          "default": true,
-          "description": "Show the position in the item description"
-        },
-        "navigationHistory.defaultSortField": {
+        "navigationHistory.sorting.defaultSortField": {
           "type": "string",
           "enum": ["time", "encore"],
           "default": "time", 
           "description": "The default sort field - 'time' for chronological order or 'encore' for visit count"
         },
-        "navigationHistory.defaultSortOrder": {
+        "navigationHistory.sorting.defaultSortOrder": {
           "type": "string",
           "enum": ["ascending", "descending"],
           "default": "descending",
           "description": "The default sort order for the navigation history"
         },
-        "navigationHistory.delimiterString": {
+        "navigationHistory.delimiter.enableDelimiter": {
+          "type": "boolean",
+          "default": true,
+          "description": "if true, the navigation history will show delimiter to enhance readability"
+        },
+        "navigationHistory.delimiter.delimiterString": {
           "type": "string",
           "default": "",
-          "description": "the delimiter for each symbol tree in the view, empty string means no delimiter"
+          "description": "the delimiter for each symbol tree in the view, only effective when enableDelimiter is true"
         },
-        "navigationHistory.defaultFolding": {
+        "navigationHistory.folding.defaultFolding": {
           "type": "boolean",
           "default": true,
           "description": "if true, the navigation history will only show limited number of symbols and fold the rest"
         },
-        "navigationHistory.unpinnedItemFoldingThreshold": {
+        "navigationHistory.folding.unpinnedItemFoldingThreshold": {
           "type": "integer",
           "default": 20,
           "description": "the threshold of the symbol's checked count to be folded"
         },
-        "navigationHistory.colorize": {
+        "navigationHistory.item.showFilenameInItemDescription": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show the filename in the item description"
+        },
+        "navigationHistory.item.showPositionInItemDescription": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show the position in the item description"
+        },
+        "navigationHistory.showStatusBarItem": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show the status bar item"
+        },
+        "navigationHistory.color.enableColorizing": {
           "type": "boolean",
           "default": true,
           "description": "if true, the navigation history will colorize the symbol based on the visit count, the bars are 20 and 60 visitings"
+        },
+        "navigationHistory.color.warmColorThreshold": {
+          "type": "integer",
+          "default": 20,
+          "description": "the threshold of the symbol's visit count to be colored as warm color"
+        },
+        "navigationHistory.color.hotColorThreshold": {
+          "type": "integer",
+          "default": 60,
+          "description": "the threshold of the symbol's visit count to be colored as hot color"
         }
       }
     },
@@ -180,7 +195,7 @@
         },
         {
           "command": "navigationHistory.delete",
-          "when": "view == navigationHistory",
+          "when": "view == navigationHistory && (viewItem == arrival || viewItem == arrivalRoot || viewItem == arrivalRootPinned)",
           "arguments": [
             {
               "$treeItem": true
@@ -189,7 +204,7 @@
         },
         {
           "command": "navigationHistory.deleteOtherTrees",
-          "when": "view == navigationHistory",
+          "when": "view == navigationHistory && (viewItem == arrival || viewItem == arrivalRoot || viewItem == arrivalRootPinned)",
           "arguments": [
             {
               "$treeItem": true
@@ -225,5 +240,6 @@
     "typescript": "^5.7.2",
     "@vscode/test-cli": "^0.0.10",
     "@vscode/test-electron": "^2.4.1"
-  }
+  },
+  "license": "MIT"
 }

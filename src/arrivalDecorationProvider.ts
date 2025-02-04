@@ -1,20 +1,21 @@
 import * as vscode from 'vscode';
 import { ArrivalCollection } from './arrivalCollection';
 
+type ColorReprOptions = {
+    warmColorThreshold: number;
+    hotColorThreshold: number;
+    colorize: boolean;
+}
+
 export class ArrivalDecorationProvider implements vscode.FileDecorationProvider {
     private arrivalCollection: ArrivalCollection;
-    private _colorScheme: [vscode.ThemeColor, number][];
-    private _doColorize: boolean = true;
+    private reprOptions: ColorReprOptions;
     private _onDidChangeFileDecorations: vscode.EventEmitter<vscode.Uri | vscode.Uri[] | undefined> = new vscode.EventEmitter<vscode.Uri | vscode.Uri[] | undefined>();
     readonly onDidChangeFileDecorations?: vscode.Event<vscode.Uri | vscode.Uri[] | undefined> | undefined = this._onDidChangeFileDecorations.event;
 
-    constructor(arrivalCollection: ArrivalCollection) {
+    constructor(arrivalCollection: ArrivalCollection, reprOptions: ColorReprOptions) {
         this.arrivalCollection = arrivalCollection;
-
-        this._colorScheme = [
-            [new vscode.ThemeColor('testing.iconPassed'), 20],
-            [new vscode.ThemeColor('errorForeground'), 60],
-        ];
+        this.reprOptions = reprOptions;
     }
 
     provideFileDecoration(uri: vscode.Uri, token: vscode.CancellationToken): vscode.ProviderResult<vscode.FileDecoration> {
@@ -36,18 +37,30 @@ export class ArrivalDecorationProvider implements vscode.FileDecorationProvider 
         return {
             badge: `${visitingCount}`,
             tooltip: `${symbolName} has been checked for ${visitingCount} times ${excalmationMarks}`,
-            color: this._doColorize ? this.color(arrival.selfEncoreCount, this._colorScheme) : undefined,
+            color: this.reprOptions.colorize ? this.color(arrival.selfEncoreCount) : undefined,
         };
     }
+
+    setReprOptions(options: ColorReprOptions) {
+        this.reprOptions = options;
+        this.refresh();
+        return this;
+    }
     
-    setColorize(doColorize: boolean) {
-        this._doColorize = doColorize;
+    updateReprOptions(options: Partial<ColorReprOptions>) {
+        this.reprOptions = { ...this.reprOptions, ...options };
         this.refresh();
         return this;
     }
 
-    private color(encoreCount: number, colorScheme: [vscode.ThemeColor, number][]): vscode.ThemeColor | undefined {
+    private color(encoreCount: number): vscode.ThemeColor | undefined {
+        let colorScheme: [vscode.ThemeColor, number][] = [
+            [new vscode.ThemeColor('testing.iconPassed'), this.reprOptions.warmColorThreshold],
+            [new vscode.ThemeColor('errorForeground'), this.reprOptions.hotColorThreshold],
+        ];
+
         colorScheme = colorScheme.sort(([color1, encoreThreshold1], [color2, encoreThreshold2]) => encoreThreshold2 - encoreThreshold1);
+
         for (const [color, encoreThreshold] of colorScheme) {
             if (encoreCount >= encoreThreshold) {
                 return color;
@@ -58,7 +71,7 @@ export class ArrivalDecorationProvider implements vscode.FileDecorationProvider 
     }
 
     refresh() {
-        const uris: vscode.Uri[] = this.arrivalCollection.all().map(arrival => arrival.symbol.tracingUri);
+        const uris: vscode.Uri[] = this.arrivalCollection.allArrivals().map(arrival => arrival.symbol.tracingUri);
         this._onDidChangeFileDecorations.fire(uris);
     }
 }
