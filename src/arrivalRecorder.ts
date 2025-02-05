@@ -82,6 +82,20 @@ export class ArrivalRecorder {
                     }
                     exitCodeBlock();
                 }
+                
+                // when drill into a class
+                if (!this.latestArrival?.isOnSameSymbolOf(arrival)
+                    && this.latestArrival?.word === arrival.symbol.name
+                    && arrival.symbol.kind === vscode.SymbolKind.Class) {
+                        
+                    const latestArrivalInTree = this.findInArrivalTree(this.latestArrival.symbol, rootArrivalForSearching, doesArrivalHasSameSymbol);
+                    if (latestArrivalInTree) {
+                        debugLog("ADD A CHILD FOR CLASS", false);
+                        latestArrivalInTree.word = arrival.word;
+                        latestArrivalInTree.addChild(arrival);
+                        exitCodeBlock();
+                    }
+                }
 
                 // when drill into(jump to) another class method or class variable from function
                 if (!this.latestArrival?.isOnSameSymbolOf(arrival)
@@ -93,8 +107,8 @@ export class ArrivalRecorder {
                     const latestArrivalInTree = this.findInArrivalTree(this.latestArrival.symbol, rootArrivalForSearching, doesArrivalHasSameSymbol);
 
                     if (latestArrivalInTree) {
-                        latestArrivalInTree.word = arrival.word;
                         debugLog("ADD A CHILD FOR CLASS AND GRANDCHILD FOR SYMBOL", false);
+                        latestArrivalInTree.word = arrival.word;
                         const classSymbolArrivalInTree = this.findInArrivalTree(arrival.symbol.parent, rootArrivalForSearching, doesArrivalHasSameSymbol);
                         // class symbol is already the child of the latest arrival
                         if (classSymbolArrivalInTree) {
@@ -106,7 +120,6 @@ export class ArrivalRecorder {
                             // add class symbol as a child of the latest arrival, bind current arrival as the child of class symbol
                             const classSymbolArrival = new Arrival(arrival.symbol.parent, arrival.symbol.parent.name);
                             classSymbolArrival.addChild(arrival);
-                            classSymbolArrival.setParent(latestArrivalInTree);
                             latestArrivalInTree.addChild(classSymbolArrival);
                             exitCodeBlock();
                         }

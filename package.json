@@ -1,8 +1,8 @@
 {
   "name": "navigation-history",
   "displayName": "Navigation History",
-  "description": "Help you read code more easily by providing navigation history in a nicer way",
-  "version": "0.0.1",
+  "description": "Enhance the experience of reading code by providing a comprehensive history of code navigation and a tree structure of calling hierarchies.",
+  "version": "1.0.1",
   "engines": {
     "vscode": "^1.80.0"
   },
