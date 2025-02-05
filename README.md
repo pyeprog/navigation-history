@@ -1,119 +1,81 @@
 # Navigation History 🧭
 
-## define what this extension is for
+## Purpose 🎯
 
-help you read code more easily by providing navigation history in a nicer way.
+A Visual Studio Code extension designed to enhance the experience of reading code by providing **a comprehensive history of code navigation** and **a tree structure of calling hierarchies**.
 
-## describe the scenario that this extension is useful
+## Use Case Scenarios 🔍
 
-when you start working on a new codebase, you need to go through the codebase to understand the overall architecture. And most of the time you do these 2 things:
+When **exploring a new codebase**, developers typically need to understand the overall architecture. This process usually involves:
 
-0. find the entry point for specific feature and start reading from there
-1. you jump around the codebase to trace the calling hierarchy to understand the implementation
+1. Locating feature entry points to begin code exploration
+2. Navigating through calling hierarchies to comprehend implementations
 
-while you are doing these, it's hard to:
+Common challenges during this process include:
 
-0. keep track of where you've been, especially when the calling hierarchy is deep and even more unfortunately you have to search around different parts of the codebase to find the entry point.
-1. understand the big picture of the codebase, because you can't remember all the structure all at once when you first start working on it.
-2. tell which part is more important and you should pay more attention to unless somebody help you out.
+1. Difficulty tracking previously visited locations, especially with deep calling hierarchies and scattered entry points
+2. Challenges in grasping the codebase's big picture during initial exploration
+3. Identifying interesting or complex code sections while reading the code
 
-## main features
+## Key Features ⭐
 
-1. remember where you've been in the codebase.
-2. show the calling hierarchy of each symbol as you go through the codebase.
-3. count how many times you've visited each symbol, the most visited ones will be highlighted.
+1. 📍 Maintains a comprehensive history of code navigation
+2. 🌳 Record the calling hierarchy of each symbol in a tree structure
+3. 📊 Tracks symbol visit frequency, highlighting frequently accessed ones
+4. 📋 Enables sorting by visit count or chronological order
+5. 📌 Allows pinning of important symbols for focused attention
 
-better to be gif.
-![calling hierarchy](./images/calling-hierarchy.png)
-![visit count](./images/visit-count.png)
-![status bar](./images/status-bar.png)
+**Calling Hierarchy Visualization**
+![showcase](./media/showcase.gif)
 
-## compare this extension with other extensions
+**Configuration Options**
+![config](./media/config.gif)
 
-### compare with default vscode "open editors"
+## How to Install 📦
 
-it's not helping with the code navigation, it's simply a better view to see all the opened files.
+### From VS Code Marketplace
 
-### compare with extension "code navigation stack"
+1. Open the Extensions view by clicking on the Extensions icon in the Activity Bar on the side of the window 
+2. Search for "Navigation History" in the search bar.
+3. Click on the "Install" button.
+4. Once installed, you can activate the extension by clicking on the "Enable" button.
 
-it's a simple extension that keeps the calling hierarchy as long as you're navigating the same calling tree, but if you jump out of the calling tree, all the history is gone.
+### From GitHub
 
-### compare with extension "codemap"
+1. Clone the repository
+2. Run `npm install` to install the dependencies
+3. Run `npm run compile` to compile the extension
+4. Run `npm run package` to package the extension
+5. Run `code --install-extension ./navigation-history-1.0.1.vsix` to install the extension
 
-by default, it's a simpler version of outline, but it's able to customize the structure parsing logic by setting rules.
+## Comparison with Existing Tools 🔄
 
-### compare with default vscode "outline"
+### VS Code's "Open Editors" View 📂
 
-it shows the outlines of the symbols in the current file, but not the calling hierarchy.
+I've found that while "Open Editors" is great for managing files, it's not really designed for helping us understand code. In my experience, I end up using the file palette more often when I need to navigate between files.
 
-## 🐛 Any Issues?
+### [Code Navigation Stack](https://marketplace.visualstudio.com/items?itemName=RoeeBarnea.code-navigation-stack) Extension 🔍
 
-So far, smooth sailing! But if you spot anything, just let us know on our GitHub repo.
+I like this extension for following a single call path, but I've noticed it struggles when I switch between different areas of code. It gets particularly tricky when I'm jumping between classes in the same file or methods within a class.
 
-## 📝 What's New?
+### VS Code's "Outline" View 📑
 
-Check out [CHANGELOG.md](CHANGELOG.md) to see what we've been up to!
+We all know this one - it shows us the symbols in our current file and updates when we switch files. I find it works best when I already know my way around the codebase.
 
----
+### [CodeMap](https://marketplace.visualstudio.com/items?itemName=oleg-shilo.codemap) Extension 🗺️
 
-## 🤝 Want to Help?
+I appreciate how this extension gives us a clean view of classes and functions, and I love that we can customize how it parses symbols. But similar to the Outline view, I've found it's most helpful once I'm familiar with the code I'm working with.
 
-Got ideas or found a bug? We'd love to hear from you! Open an issue on our GitHub repository.
+## Bug Reports 🐛
 
-## 📜 License
+I'm happy to report everything's working great so far! But if you run into any problems, I'd really appreciate it if you could let me know by opening an issue on our GitHub repository.
 
-This extension is available under the MIT License.
+## Release Notes 📝
 
-**Happy Exploring!** 🚀✨
+For detailed updates and changes, please refer to [CHANGELOG.md](CHANGELOG.md).
 
----
+## License 📄
 
-Hey there! 👋 Looking for a better way to explore your code? This VS Code extension is here to help! It makes reading and navigating through your codebase a breeze by showing you where you've been and helping you understand your code better.
+This extension is distributed under the MIT License.
 
-## ✨ What's Cool About This?
-
-### 🗺️ Your Personal Code Map
-
-- Keep track of everywhere you've been in your code
-- See how different parts of your code connect
-- Never lose your way in the codebase again
-- Easily retrace your steps when you need to
-
-### 🎯 Smart Highlights
-
-- Your most-visited code spots get special highlighting
-- Different colors show how often you visit each part
-- Instantly spot the important bits of your code
-
-## 🤔 Why Do You Need This?
-
-Ever found yourself thinking:
-
-- "Wait, where was I just looking?"
-- "How did I get to this part of the code?"
-- "What's the big picture here?"
-
-VS Code's "Recently Opened" is nice, but sometimes you need a friendlier way to keep track of your coding journey. That's where we come in!
-
-## 🚀 Let's Get Started
-
-It's super easy:
-
-1. Grab the extension from VS Code Marketplace
-2. Open up your project
-3. Start exploring your code
-4. Check out your navigation history in the Activity Bar
-
-## ⚙️ Make It Yours
-
-Customize the extension with these settings:
-
-- `navigationHistory.showStatusBarItem`: Want to see updates in your status bar? ✅
-- `navigationHistory.item.showFilenameInItemDescription`: Show file names in descriptions
-- `navigationHistory.item.showPositionInItemDescription`: Include position info
-- `navigationHistory.sorting.defaultSortField`: Sort by time or visit count ('time' or 'encore')
-- `navigationHistory.sorting.defaultSortOrder`: Choose ascending or descending order
-- `navigationHistory.delimiter.delimiterString`: Add separators between symbol trees
-- `navigationHistory.folding.defaultFolding`: Keep things tidy with automatic folding
-- `navigationHistory.folding.unpinnedItemFoldingThreshold`: Set when items should fold away
-- `navigationHistory.color.enableColorizing`: Add color coding based on how often you visit (changes at 20 and 60 visits)
+**Happy Code Reading!** 🚀✨

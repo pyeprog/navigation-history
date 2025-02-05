@@ -9,7 +9,7 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 ### Added
 
 - make colorizing customizable.
-- fix some bugs.
+- fix bugs.
 
 ## [1.0.0] - 2025-01-24
 

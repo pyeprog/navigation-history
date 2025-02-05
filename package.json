@@ -1,8 +1,14 @@
 {
   "name": "navigation-history",
   "displayName": "Navigation History",
-  "description": "Help you read code more easily by providing navigation history in a nicer way",
-  "version": "0.0.1",
+  "description": "Enhance the experience of reading code by providing a comprehensive history of code navigation and a tree structure of calling hierarchies.",
+  "version": "1.0.1",
+  "publisher": "Leon Pye",
+  "icon": "media/icon.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/pyeprog/navigation-history"
+  },
   "engines": {
     "vscode": "^1.80.0"
   },
@@ -229,7 +235,7 @@
     "test": "vscode-test"
   },
   "devDependencies": {
-    "@types/vscode": "^1.96.0",
+    "@types/vscode": "^1.80.0",
     "@types/mocha": "^10.0.10",
     "@types/node": "20.x",
     "@typescript-eslint/eslint-plugin": "^8.17.0",
