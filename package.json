@@ -3,7 +3,7 @@
   "displayName": "Navigation History",
   "description": "Enhance the experience of reading code by providing a comprehensive history of code navigation and a tree structure of calling hierarchies.",
   "version": "1.0.1",
-  "publisher": "Leon Pye",
+  "publisher": "WaylongLeon",
   "icon": "media/icon.png",
   "repository": {
     "type": "git",
