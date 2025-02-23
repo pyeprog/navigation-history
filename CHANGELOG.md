@@ -4,6 +4,12 @@ All notable changes to the "navigation-history" extension will be documented in 
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [1.0.3] - 2025-02-23
+
+### Fixed
+
+- fix bug of recording.
+
 ## [1.0.2] - 2025-02-23
 
 ### Fixed

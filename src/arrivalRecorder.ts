@@ -51,19 +51,6 @@ export class ArrivalRecorder {
             for (let i = this.arrivalCollection.length - 1; i >= 0; --i) {
                 const rootArrivalForSearching = this.arrivalCollection.at(i);
                 
-                const arrivalInTreeBeforeEditing: Arrival | undefined = this.findSymbolAncestorInArrivalTree(arrival.symbol, rootArrivalForSearching, isSymbolTheSameAsArrivalWhenEditing);
-                
-                // special case: when we edit the symbol
-                if (arrivalInTreeBeforeEditing) {
-                    // when we edit the symbol, the symbol under cursor will be slightly different from the symbol in the tree, but their start position should be the same.
-                    // so we need to find the old symbol by this feature, and then replace the old symbol with the new version.
-                    // and we shouldn't increase encore count, because we are just editing inline, not moving around.
-
-                    arrivalInTreeBeforeEditing.symbol = arrival.symbol;
-                    recordedArrival = arrivalInTreeBeforeEditing;
-                    exitCodeBlock();
-                }
-                
                 const arrivalInTree: Arrival | undefined = this.findSymbolAncestorInArrivalTree(arrival.symbol, rootArrivalForSearching, doesArrivalHasSameSymbol);
 
                 // when move around in range of same symbol I've already arrived
@@ -143,6 +130,20 @@ export class ArrivalRecorder {
                         }
                     }
                 }
+
+                const arrivalInTreeBeforeEditing: Arrival | undefined = this.findInArrivalTree(arrival.symbol, rootArrivalForSearching, isSymbolTheSameAsArrivalWhenEditing);
+                
+                // special case: when we edit the symbol
+                if (arrivalInTreeBeforeEditing) {
+                    // when we edit the symbol, the symbol under cursor will be slightly different from the symbol in the tree, but their start position should be the same.
+                    // so we need to find the old symbol by this feature, and then replace the old symbol with the new version.
+                    // and we shouldn't increase encore count, because we are just editing inline, not moving around.
+
+                    arrivalInTreeBeforeEditing.symbol = arrival.symbol;
+                    recordedArrival = arrivalInTreeBeforeEditing;
+                    exitCodeBlock();
+                }
+                
             }
 
             // when move around outside the scope of latest arrival, this is the default behavior

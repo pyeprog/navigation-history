@@ -2,7 +2,7 @@
   "name": "navigation-history",
   "displayName": "Navigation History",
   "description": "Enhance the experience of reading code by providing a comprehensive history of code navigation and a tree structure of calling hierarchies.",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "publisher": "WaylongLeon",
   "icon": "media/icon.png",
   "repository": {
