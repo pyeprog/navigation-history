@@ -4,6 +4,12 @@ All notable changes to the "navigation-history" extension will be documented in 
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [1.0.2] - 2025-02-23
+
+### Fixed
+
+- fix the bug that when editing, the symbol under cursor will be treated as a new symbol, thus bloat the navigation history tree.
+
 ## [1.0.1] - 2025-02-03
 
 ### Added

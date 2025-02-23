@@ -22,13 +22,24 @@ export class TracableSymbol extends vscode.DocumentSymbol {
     get tracingUri(): vscode.Uri {
         return vscode.Uri.parse(`tracableSymbol://${this.uri.fsPath}/${this.name}/${this.range.start.line}-${this.range.start.character}-${this.range.end.line}-${this.range.end.character}`);
     }
+        
+    hasSameStartPosition(other: TracableSymbol): boolean {
+        return this.range.start.isEqual(other.range.start)
+            && this.kind === other.kind
+            && this.uri.fsPath === other.uri.fsPath;
+    }
+    
+    hasSameEndPosition(other: TracableSymbol): boolean {
+        return this.range.end.isEqual(other.range.end)
+            && this.kind === other.kind
+            && this.uri.fsPath === other.uri.fsPath;
+    }
 
     isEqual(other: TracableSymbol): boolean {
         return this.name === other.name
-            && this.uri.fsPath === other.uri.fsPath
             && this.detail === other.detail
-            && this.kind === other.kind
-            && this.range.isEqual(other.range)
+            && this.hasSameStartPosition(other)
+            && this.hasSameEndPosition(other)
             && this.selectionRange.isEqual(other.selectionRange);
     }
 

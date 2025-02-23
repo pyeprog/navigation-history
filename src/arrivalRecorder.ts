@@ -43,43 +43,52 @@ export class ArrivalRecorder {
                 return arrival.symbol.isEqual(symbol);
             }
             
-            function isSymbolBeenOneOf(symbol: vscode.SymbolKind | null | undefined, symbols: vscode.SymbolKind[]) {
-                if (!symbol) {
-                    return false;
-                }
-                
-                return symbols.includes(symbol);
+            function isSymbolTheSameAsArrivalWhenEditing(symbol: TracableSymbol, arrival: Arrival) {
+                return arrival.symbol.hasSameStartPosition(symbol);
             }
 
             // iterate through arrival collection from latest to oldest
             for (let i = this.arrivalCollection.length - 1; i >= 0; --i) {
                 const rootArrivalForSearching = this.arrivalCollection.at(i);
+                
+                const arrivalInTreeBeforeEditing: Arrival | undefined = this.findSymbolAncestorInArrivalTree(arrival.symbol, rootArrivalForSearching, isSymbolTheSameAsArrivalWhenEditing);
+                
+                // special case: when we edit the symbol
+                if (arrivalInTreeBeforeEditing) {
+                    // when we edit the symbol, the symbol under cursor will be slightly different from the symbol in the tree, but their start position should be the same.
+                    // so we need to find the old symbol by this feature, and then replace the old symbol with the new version.
+                    // and we shouldn't increase encore count, because we are just editing inline, not moving around.
 
-                const pastArrivalInTree: Arrival | undefined = this.findSymbolAncestorInArrivalTree(arrival.symbol, rootArrivalForSearching, doesArrivalHasSameSymbol);
+                    arrivalInTreeBeforeEditing.symbol = arrival.symbol;
+                    recordedArrival = arrivalInTreeBeforeEditing;
+                    exitCodeBlock();
+                }
+                
+                const arrivalInTree: Arrival | undefined = this.findSymbolAncestorInArrivalTree(arrival.symbol, rootArrivalForSearching, doesArrivalHasSameSymbol);
 
                 // when move around in range of same symbol I've already arrived
-                if (pastArrivalInTree && pastArrivalInTree.isOnSameSymbolOf(arrival)) {
+                if (arrivalInTree && arrivalInTree.isOnSameSymbolOf(arrival)) {
                     debugLog("NOTHING SHOWS", false);
                     // if there's already in the tree an ancestor arrival that has the same symbol, then we don't add this arrival to the tree.
                     // but the recorded arrival(returned value) should be the ancestor arrival, not the current arrival.
                     // in another word, if we have already seen this symbol of the current arrival, we use the old arrival.
-                    recordedArrival = pastArrivalInTree;
-                    pastArrivalInTree.encore();
+                    recordedArrival = arrivalInTree;
+                    arrivalInTree.encore();
                     exitCodeBlock();
                 }
 
                 // when move around in range of same symbol I've alread arrived but land on the unmet sub-symbol
-                if (pastArrivalInTree) {
+                if (arrivalInTree) {
                     debugLog("ADD A CHILD FOR LANDING ON SUB-SYMBOL", false);
-                    const newArrivalTreeRoot: Arrival = this.createNewArrivalTreeFromLeaf(arrival, pastArrivalInTree?.symbol);
-                    pastArrivalInTree.addChild(newArrivalTreeRoot);
+                    const newArrivalTreeRoot: Arrival = this.createNewArrivalTreeFromLeaf(arrival, arrivalInTree?.symbol);
+                    arrivalInTree.addChild(newArrivalTreeRoot);
                     exitCodeBlock();
                 }
 
                 // when drill into(jump to) another function or (independent) variable from function
                 if (!this.latestArrival?.isOnSameSymbolOf(arrival)
                     && this.latestArrival?.word === arrival.symbol.name
-                    && isSymbolBeenOneOf(arrival.symbol.kind, [vscode.SymbolKind.Function, vscode.SymbolKind.Variable, vscode.SymbolKind.Constant])
+                    && this.isSymbolBeenOneOf(arrival.symbol.kind, [vscode.SymbolKind.Function, vscode.SymbolKind.Variable, vscode.SymbolKind.Constant])
                     && !arrival.symbol.parent) {
 
                     debugLog("ADD A CHILD FOR DRILLING IN", false);
@@ -108,7 +117,7 @@ export class ArrivalRecorder {
                 // when drill into(jump to) another class method or class variable from function
                 if (!this.latestArrival?.isOnSameSymbolOf(arrival)
                     && this.latestArrival?.word === arrival.symbol.name
-                    && isSymbolBeenOneOf(arrival.symbol.parent?.kind, [vscode.SymbolKind.Class, vscode.SymbolKind.Object])) {
+                    && this.isSymbolBeenOneOf(arrival.symbol.parent?.kind, [vscode.SymbolKind.Class, vscode.SymbolKind.Object])) {
 
                     // don't combine this block with other ones for simplicity, the logic of this block is different from the other ones,
                     // they will evolve independently, thus a little bit of redundancy is acceptable.
@@ -221,4 +230,19 @@ export class ArrivalRecorder {
 
         return undefined;
     }
+
+    /**
+     * Check if the symbol is one of the given symbols
+     * @param symbol the symbol to check, can be null or undefined
+     * @param symbols the symbols to check against
+     * @returns true if the symbol is one of the given symbols, false otherwise
+     */
+    private isSymbolBeenOneOf(symbol: vscode.SymbolKind | null | undefined, symbols: vscode.SymbolKind[]) {
+        if (!symbol) {
+            return false;
+        }
+
+        return symbols.includes(symbol);
+    }
+
 }
