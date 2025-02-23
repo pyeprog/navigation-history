@@ -39,13 +39,21 @@ export class ArrivalRecorder {
                 exitCodeBlock();
             }
 
+            function doesArrivalHasSameSymbol(symbol: TracableSymbol, arrival: Arrival) {
+                return arrival.symbol.isEqual(symbol);
+            }
+            
+            function isSymbolBeenOneOf(symbol: vscode.SymbolKind | null | undefined, symbols: vscode.SymbolKind[]) {
+                if (!symbol) {
+                    return false;
+                }
+                
+                return symbols.includes(symbol);
+            }
+
             // iterate through arrival collection from latest to oldest
             for (let i = this.arrivalCollection.length - 1; i >= 0; --i) {
                 const rootArrivalForSearching = this.arrivalCollection.at(i);
-
-                function doesArrivalHasSameSymbol(symbol: TracableSymbol, arrival: Arrival) {
-                    return arrival.symbol.isEqual(symbol);
-                }
 
                 const pastArrivalInTree: Arrival | undefined = this.findSymbolAncestorInArrivalTree(arrival.symbol, rootArrivalForSearching, doesArrivalHasSameSymbol);
 
@@ -71,7 +79,7 @@ export class ArrivalRecorder {
                 // when drill into(jump to) another function or (independent) variable from function
                 if (!this.latestArrival?.isOnSameSymbolOf(arrival)
                     && this.latestArrival?.word === arrival.symbol.name
-                    && [vscode.SymbolKind.Function, vscode.SymbolKind.Variable, vscode.SymbolKind.Constant].includes(arrival.symbol.kind)
+                    && isSymbolBeenOneOf(arrival.symbol.kind, [vscode.SymbolKind.Function, vscode.SymbolKind.Variable, vscode.SymbolKind.Constant])
                     && !arrival.symbol.parent) {
 
                     debugLog("ADD A CHILD FOR DRILLING IN", false);
@@ -82,12 +90,12 @@ export class ArrivalRecorder {
                     }
                     exitCodeBlock();
                 }
-                
+
                 // when drill into a class
                 if (!this.latestArrival?.isOnSameSymbolOf(arrival)
                     && this.latestArrival?.word === arrival.symbol.name
                     && arrival.symbol.kind === vscode.SymbolKind.Class) {
-                        
+
                     const latestArrivalInTree = this.findInArrivalTree(this.latestArrival.symbol, rootArrivalForSearching, doesArrivalHasSameSymbol);
                     if (latestArrivalInTree) {
                         debugLog("ADD A CHILD FOR CLASS", false);
@@ -100,7 +108,7 @@ export class ArrivalRecorder {
                 // when drill into(jump to) another class method or class variable from function
                 if (!this.latestArrival?.isOnSameSymbolOf(arrival)
                     && this.latestArrival?.word === arrival.symbol.name
-                    && arrival.symbol.parent?.kind === vscode.SymbolKind.Class) {
+                    && isSymbolBeenOneOf(arrival.symbol.parent?.kind, [vscode.SymbolKind.Class, vscode.SymbolKind.Object])) {
 
                     // don't combine this block with other ones for simplicity, the logic of this block is different from the other ones,
                     // they will evolve independently, thus a little bit of redundancy is acceptable.
@@ -118,7 +126,8 @@ export class ArrivalRecorder {
                             // class symbol is not the child of the latest arrival
                         } else {
                             // add class symbol as a child of the latest arrival, bind current arrival as the child of class symbol
-                            const classSymbolArrival = new Arrival(arrival.symbol.parent, arrival.symbol.parent.name);
+                            const parentSymbol = arrival.symbol.parent as TracableSymbol;
+                            const classSymbolArrival = new Arrival(parentSymbol, parentSymbol.name);
                             classSymbolArrival.addChild(arrival);
                             latestArrivalInTree.addChild(classSymbolArrival);
                             exitCodeBlock();
