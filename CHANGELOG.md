@@ -4,6 +4,12 @@ All notable changes to the "navigation-history" extension will be documented in 
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [1.0.4] - 2025-02-24
+
+### Modified
+
+- change recording logic when jump from one method of a class to another method of the same class.
+
 ## [1.0.3] - 2025-02-23
 
 ### Fixed

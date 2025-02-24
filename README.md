@@ -17,6 +17,11 @@ Common challenges during this process include:
 2. Challenges in grasping the codebase's big picture during initial exploration
 3. Identifying interesting or complex code sections while reading the code
 
+Thus, this extension is designed to help developers to:
+
+1. Record the history of code navigation, and organize the history as a tree reflecting the calling hierarchy of each symbol
+2. Focus on most important symbols, which could be chosen by visit count or manually pinned
+
 ## Key Features ⭐
 
 1. 📍 Maintains a comprehensive history of code navigation
