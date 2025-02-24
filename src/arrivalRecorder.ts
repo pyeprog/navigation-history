@@ -51,24 +51,16 @@ export class ArrivalRecorder {
             for (let i = this.arrivalCollection.length - 1; i >= 0; --i) {
                 const rootArrivalForSearching = this.arrivalCollection.at(i);
                 
-                const arrivalInTree: Arrival | undefined = this.findSymbolAncestorInArrivalTree(arrival.symbol, rootArrivalForSearching, doesArrivalHasSameSymbol);
+                const arrivalInTree: Arrival | undefined = this.findInArrivalTree(arrival.symbol, rootArrivalForSearching, doesArrivalHasSameSymbol);
 
                 // when move around in range of same symbol I've already arrived
-                if (arrivalInTree && arrivalInTree.isOnSameSymbolOf(arrival)) {
+                if (arrivalInTree) {
                     debugLog("NOTHING SHOWS", false);
                     // if there's already in the tree an ancestor arrival that has the same symbol, then we don't add this arrival to the tree.
                     // but the recorded arrival(returned value) should be the ancestor arrival, not the current arrival.
                     // in another word, if we have already seen this symbol of the current arrival, we use the old arrival.
                     recordedArrival = arrivalInTree;
                     arrivalInTree.encore();
-                    exitCodeBlock();
-                }
-
-                // when move around in range of same symbol I've alread arrived but land on the unmet sub-symbol
-                if (arrivalInTree) {
-                    debugLog("ADD A CHILD FOR LANDING ON SUB-SYMBOL", false);
-                    const newArrivalTreeRoot: Arrival = this.createNewArrivalTreeFromLeaf(arrival, arrivalInTree?.symbol);
-                    arrivalInTree.addChild(newArrivalTreeRoot);
                     exitCodeBlock();
                 }
 
@@ -79,6 +71,21 @@ export class ArrivalRecorder {
                     && !arrival.symbol.parent) {
 
                     debugLog("ADD A CHILD FOR DRILLING IN", false);
+                    const latestArrivalInTree = this.findInArrivalTree(this.latestArrival.symbol, rootArrivalForSearching, doesArrivalHasSameSymbol);
+                    if (latestArrivalInTree) {
+                        latestArrivalInTree.word = this.latestArrival.word;
+                        latestArrivalInTree.addChild(arrival);
+                    }
+                    exitCodeBlock();
+                }
+                
+                // when drill into another method of same class
+                if (!this.latestArrival?.isOnSameSymbolOf(arrival)
+                    && this.latestArrival?.word === arrival.symbol.name
+                    && arrival.symbol.kind === vscode.SymbolKind.Method
+                    && arrival.symbol.parent?.isEqual(this.latestArrival?.symbol?.parent)) {
+
+                    debugLog("ADD A CHILD FOR DRILLING INTO ANOTHER METHOD OF SAME CLASS", false);
                     const latestArrivalInTree = this.findInArrivalTree(this.latestArrival.symbol, rootArrivalForSearching, doesArrivalHasSameSymbol);
                     if (latestArrivalInTree) {
                         latestArrivalInTree.word = this.latestArrival.word;
@@ -104,6 +111,8 @@ export class ArrivalRecorder {
                 // when drill into(jump to) another class method or class variable from function
                 if (!this.latestArrival?.isOnSameSymbolOf(arrival)
                     && this.latestArrival?.word === arrival.symbol.name
+                    && !arrival.symbol.parent?.isEqual(this.latestArrival?.symbol)
+                    && !arrival.symbol.parent?.isEqual(this.latestArrival?.symbol?.parent)
                     && this.isSymbolBeenOneOf(arrival.symbol.parent?.kind, [vscode.SymbolKind.Class, vscode.SymbolKind.Object])) {
 
                     // don't combine this block with other ones for simplicity, the logic of this block is different from the other ones,
@@ -144,6 +153,15 @@ export class ArrivalRecorder {
                     exitCodeBlock();
                 }
                 
+                // when move around, but symbol that contains arrival's symbol(including itself) has been already in the tree, thus append the arrival as a child of the old symbol
+                const ancestorArrivalInTree = this.findSymbolAncestorInArrivalTree(arrival.symbol, rootArrivalForSearching, doesArrivalHasSameSymbol);
+                if (ancestorArrivalInTree) {
+                    debugLog("ADD A CHILD TO ANCESTOR FOR LANDING ON ITS SUB-SYMBOL", false);
+                    const newArrivalTreeRoot: Arrival = this.createNewArrivalTreeFromLeaf(arrival, ancestorArrivalInTree?.symbol);
+                    ancestorArrivalInTree.addChild(newArrivalTreeRoot);
+                    exitCodeBlock();
+                }
+
             }
 
             // when move around outside the scope of latest arrival, this is the default behavior

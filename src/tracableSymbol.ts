@@ -35,7 +35,11 @@ export class TracableSymbol extends vscode.DocumentSymbol {
             && this.uri.fsPath === other.uri.fsPath;
     }
 
-    isEqual(other: TracableSymbol): boolean {
+    isEqual(other: TracableSymbol | undefined | null): boolean {
+        if (!other) {
+            return false;
+        }
+
         return this.name === other.name
             && this.detail === other.detail
             && this.hasSameStartPosition(other)
