@@ -168,7 +168,7 @@ export class ArrivalRecorder {
             debugLog("ADD A NEW ITEM TREE", false);
             this.arrivalCollection.push(this.createNewArrivalTreeFromLeaf(arrival));
 
-        } catch (exitCodeBlock) {
+        } catch (_exitCodeBlock) {
             // only for exit the above code block
         } finally {
             this.latestArrival = arrival;

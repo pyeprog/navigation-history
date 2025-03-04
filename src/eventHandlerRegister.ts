@@ -2,10 +2,9 @@ import * as vscode from 'vscode';
 import { ArrivalHistoryProvider } from './arrivalHistoryProvider';
 import { ArrivalRecorder } from './arrivalRecorder';
 import { parseArrivalFromEditorState } from './util';
-import { Arrival, SortField, SortOrder, TreeItemInterface } from './arrival';
+import { SortField, SortOrder, TreeItemInterface } from './arrival';
 import { ArrivalDecorationProvider } from './arrivalDecorationProvider';
 import { ArrivalStatusBarItem } from './arrivalStatusBarItem';
-import { ArrivalCollection } from './arrivalCollection';
 
 
 export function registerUpdatingHandler(
@@ -32,7 +31,12 @@ export function registerUpdatingHandler(
         decorationProvider.refresh();
         statusBarItem.refresh();
 
-        treeView.reveal(savedArrival, { select: true, focus: false, expand: 3 });
+        if (treeView.visible) {
+            // treeView.reveal is a way to show a selected status, do auto-focusing and auto-expanding
+            // if the treeView is not visible(folded), we should stop doing revealing, since it will expand the folded view automatically
+            treeView.reveal(savedArrival, { select: true, focus: false, expand: true });
+        }
+
     });
 }
 

@@ -4,6 +4,12 @@ All notable changes to the "navigation-history" extension will be documented in 
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [1.0.5] - 2025-03-03
+
+### Modified
+
+- fix the bug that the tree view will be expanded automatically when you arrive at a new symbol.
+
 ## [1.0.4] - 2025-02-24
 
 ### Modified
