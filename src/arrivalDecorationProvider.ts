@@ -18,7 +18,7 @@ export class ArrivalDecorationProvider implements vscode.FileDecorationProvider 
         this.reprOptions = reprOptions;
     }
 
-    provideFileDecoration(uri: vscode.Uri, token: vscode.CancellationToken): vscode.ProviderResult<vscode.FileDecoration> {
+    provideFileDecoration(uri: vscode.Uri, _token: vscode.CancellationToken): vscode.ProviderResult<vscode.FileDecoration> {
         if (uri.scheme !== 'tracableSymbol') {
             return {};
         }
@@ -46,7 +46,7 @@ export class ArrivalDecorationProvider implements vscode.FileDecorationProvider 
         this.refresh();
         return this;
     }
-    
+
     updateReprOptions(options: Partial<ColorReprOptions>) {
         this.reprOptions = { ...this.reprOptions, ...options };
         this.refresh();
@@ -59,7 +59,7 @@ export class ArrivalDecorationProvider implements vscode.FileDecorationProvider 
             [new vscode.ThemeColor('errorForeground'), this.reprOptions.hotColorThreshold],
         ];
 
-        colorScheme = colorScheme.sort(([color1, encoreThreshold1], [color2, encoreThreshold2]) => encoreThreshold2 - encoreThreshold1);
+        colorScheme = colorScheme.sort(([_color1, encoreThreshold1], [_color2, encoreThreshold2]) => encoreThreshold2 - encoreThreshold1);
 
         for (const [color, encoreThreshold] of colorScheme) {
             if (encoreCount >= encoreThreshold) {
