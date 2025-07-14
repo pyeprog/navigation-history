@@ -4,6 +4,10 @@ All notable changes to the "navigation-history" extension will be documented in 
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [1.0.6] - 2025-07-15
+
+- fix bug of 'fsPath error' and fail functioning on vscode 1.102.0+.
+
 ## [1.0.5] - 2025-03-03
 
 ### Modified

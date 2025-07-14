@@ -1,10 +1,13 @@
 import assert from 'assert';
 import * as vscode from 'vscode';
 
+
 export class TracableSymbol extends vscode.DocumentSymbol {
+    private static readonly TYPE_TOKEN = Symbol("TracableSymbol");
     uri: vscode.Uri;
     children: TracableSymbol[];
     parent: TracableSymbol | undefined | null;
+
 
     constructor(uri: vscode.Uri, name: string, detail: string, kind: vscode.SymbolKind, range: vscode.Range, selectionRange: vscode.Range, children?: TracableSymbol[], parent?: TracableSymbol) {
         assert(name, 'name is required to be a non-empty string, or Symbol is in ill format, and exception will be thrown');
@@ -18,7 +21,7 @@ export class TracableSymbol extends vscode.DocumentSymbol {
     static empty(): TracableSymbol {
         return new TracableSymbol(vscode.Uri.parse('delimiter'), 'delimiter', '', vscode.SymbolKind.File, new vscode.Range(0, 0, 0, 1), new vscode.Range(0, 0, 0, 1));
     }
-
+    
     get tracingUri(): vscode.Uri {
         return vscode.Uri.parse(`tracableSymbol://${this.uri.fsPath}/${this.name}/${this.range.start.line}-${this.range.start.character}-${this.range.end.line}-${this.range.end.character}`);
     }
@@ -46,12 +49,17 @@ export class TracableSymbol extends vscode.DocumentSymbol {
             && this.hasSameEndPosition(other)
             && this.selectionRange.isEqual(other.selectionRange);
     }
+    
+    static isTypeOf(obj?: any): boolean {
+        return obj?.TYPE_TOKEN === TracableSymbol.TYPE_TOKEN;
+    }
 
-    static createFrom(uri: vscode.Uri, symbol: vscode.DocumentSymbol, parent?: TracableSymbol): TracableSymbol {
-        if (symbol instanceof TracableSymbol) {
+    static createFrom(uri: vscode.Uri, symbol: vscode.DocumentSymbol | TracableSymbol, parent?: TracableSymbol): TracableSymbol {
+        if (TracableSymbol.isTypeOf(symbol)) {
             // if the symbol has parent, then we leave it alone, otherwise we set it to the parent
-            symbol.parent = symbol.parent || parent;
-            return symbol;
+            let tracableSymbol = symbol as TracableSymbol;
+            tracableSymbol.parent = tracableSymbol.parent || parent;
+            return tracableSymbol;
         }
 
         let tracableSymbol = new TracableSymbol(uri, symbol.name, symbol.detail, symbol.kind, symbol.range, symbol.selectionRange, [], parent);
