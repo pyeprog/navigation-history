@@ -48,6 +48,11 @@ export class ArrivalRecorder {
                 return arrival.symbol.hasSameStartPosition(symbol);
             }
 
+            // In some programming languages (such as C), the symbol.name field in Arrival contains a parameter list, while the word field does not, so the content inside the parentheses needs to be removed before matching.
+            function removeParenthesesContent(str: string): string {
+                return str.replace(/\([^)]*\)/g, '');
+            }
+
             // iterate through arrival collection from latest to oldest
             for (let i = this.arrivalCollection.length - 1; i >= 0; --i) {
                 const rootArrivalForSearching = this.arrivalCollection.at(i);
@@ -67,7 +72,7 @@ export class ArrivalRecorder {
 
                 // when drill into(jump to) another function or (independent) variable from function
                 if (!this.latestArrival?.isOnSameSymbolOf(arrival)
-                    && this.latestArrival?.word === arrival.symbol.name
+                    && this.latestArrival?.word === removeParenthesesContent(arrival.symbol.name)
                     && this.isSymbolBeenOneOf(arrival.symbol.kind, [vscode.SymbolKind.Function, vscode.SymbolKind.Variable, vscode.SymbolKind.Constant])
                     && !arrival.symbol.parent) {
 
@@ -82,7 +87,7 @@ export class ArrivalRecorder {
 
                 // when drill into another method of same class
                 if (!this.latestArrival?.isOnSameSymbolOf(arrival)
-                    && this.latestArrival?.word === arrival.symbol.name
+                    && this.latestArrival?.word === removeParenthesesContent(arrival.symbol.name)
                     && arrival.symbol.kind === vscode.SymbolKind.Method
                     && arrival.symbol.parent?.isEqual(this.latestArrival?.symbol?.parent)) {
 
@@ -97,7 +102,7 @@ export class ArrivalRecorder {
 
                 // when drill into a class
                 if (!this.latestArrival?.isOnSameSymbolOf(arrival)
-                    && this.latestArrival?.word === arrival.symbol.name
+                    && this.latestArrival?.word === removeParenthesesContent(arrival.symbol.name)
                     && arrival.symbol.kind === vscode.SymbolKind.Class) {
 
                     const latestArrivalInTree = this.findInArrivalTree(this.latestArrival.symbol, rootArrivalForSearching, doesArrivalHasSameSymbol);
@@ -111,7 +116,7 @@ export class ArrivalRecorder {
 
                 // when drill into(jump to) another class method or class variable from function
                 if (!this.latestArrival?.isOnSameSymbolOf(arrival)
-                    && this.latestArrival?.word === arrival.symbol.name
+                    && this.latestArrival?.word === removeParenthesesContent(arrival.symbol.name)
                     && !arrival.symbol.parent?.isEqual(this.latestArrival?.symbol)
                     && !arrival.symbol.parent?.isEqual(this.latestArrival?.symbol?.parent)
                     && this.isSymbolBeenOneOf(arrival.symbol.parent?.kind, [vscode.SymbolKind.Class, vscode.SymbolKind.Object])) {
