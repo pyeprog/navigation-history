@@ -20,11 +20,12 @@ export type TreeViewReprOptions = delimiterReprOptions & SectionDelimiterReprOpt
 
 export function toTreeItemCollection(arrivalCollection: ArrivalCollection, reprOptions: TreeViewReprOptions): TreeItemInterface[] {
     function addDelimiter(arrivals: TreeItemInterface[], delimiterString: string): TreeItemInterface[] {
-        const delimiter = new Delimiter(delimiterString);
         const result: TreeItemInterface[] = [];
         for (const arrival of arrivals) {
             result.push(arrival);
-            result.push(delimiter);
+            // each delimiter must be a distinct instance: the tree view rejects
+            // the same element appearing twice among the children
+            result.push(new Delimiter(delimiterString));
         }
         // pop the delimiter at the end
         result.pop();
@@ -49,12 +50,21 @@ export function toTreeItemCollection(arrivalCollection: ArrivalCollection, reprO
         return arrivalWithIndex.map(([arrival, _]) => arrival);
     }
 
+    if (arrivalCollection.isEmpty) {
+        return [];
+    }
+
     arrivalCollection.setReprOptions(reprOptions);
     const pinnedArrivals = sortArrivals(arrivalCollection.pinnedArrivals(), reprOptions.sortOrder, reprOptions.sortField);
     const unpinnedArrivals = sortArrivals(arrivalCollection.unpinnedArrivals(), reprOptions.sortOrder, reprOptions.sortField);
-    const shortenUnpinnedArrivals = reprOptions.hideHistory ? unpinnedArrivals.slice(0, reprOptions.unpinHideThreshold) : unpinnedArrivals;
+    const hideThreshold = Math.max(0, reprOptions.unpinHideThreshold);
+    // hiding always keeps the "most relevant" end: with ascending order that end is
+    // the tail of the list, with descending order it is the head
+    const shortenUnpinnedArrivals = reprOptions.sortOrder === 'ascending'
+        ? (hideThreshold > 0 ? unpinnedArrivals.slice(-hideThreshold) : [])
+        : unpinnedArrivals.slice(0, hideThreshold);
     let hiddenUnpinnedArrivals: TreeItemInterface[];
-    if (unpinnedArrivals.length > reprOptions.unpinHideThreshold && reprOptions.hideHistory) {
+    if (unpinnedArrivals.length > hideThreshold && reprOptions.hideHistory) {
         if (reprOptions.sortOrder === 'ascending') {
             hiddenUnpinnedArrivals = [new HistoryPlaceholder(), ...shortenUnpinnedArrivals];
         } else {

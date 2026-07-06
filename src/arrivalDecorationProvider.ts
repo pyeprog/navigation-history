@@ -21,18 +21,17 @@ export class ArrivalDecorationProvider implements vscode.FileDecorationProvider 
 
     provideFileDecoration(uri: vscode.Uri, _token: vscode.CancellationToken): vscode.ProviderResult<vscode.FileDecoration> {
         if (uri.scheme !== 'tracableSymbol') {
-            return {};
+            return undefined;
         }
 
         const arrival = this.arrivalCollection.getByTracingUri(uri);
         if (!arrival) {
-            return {};
+            return undefined;
         }
 
         const visitingCount = (arrival.selfEncoreCount > 98 ? 98 : arrival.selfEncoreCount) + 1;
 
-        // tracing symbol's uri guarantees that it has no less than 2 parts and the second last part is the symbol name
-        const symbolName = uri.path.split('/').at(-2);
+        const symbolName = arrival.symbol.name;
         const excalmationMarks = '!'.repeat(Math.round(visitingCount / 20));
 
         return {
@@ -82,7 +81,8 @@ export class ArrivalDecorationProvider implements vscode.FileDecorationProvider 
     }
 
     refresh() {
-        const uris: vscode.Uri[] = this.arrivalCollection.allArrivals().map(arrival => arrival.symbol.tracingUri);
-        this._onDidChangeFileDecorations.fire(uris);
+        // fire undefined to refresh every decoration: firing only the currently known uris
+        // would leave stale badges behind after arrivals are deleted or their ranges shift
+        this._onDidChangeFileDecorations.fire(undefined);
     }
 }

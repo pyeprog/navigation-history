@@ -1,8 +1,7 @@
 import * as vscode from 'vscode';
 import { TracableSymbol } from './tracableSymbol';
 import { Arrival } from './arrival';
-import { debugLog } from './debug';
-import assert from 'assert';
+import { debugLog, logInfo } from './debug';
 
 
 export async function extractSymbols(doc: vscode.TextDocument, position: vscode.Position): Promise<TracableSymbol | null> {
@@ -31,7 +30,14 @@ export async function extractSymbols(doc: vscode.TextDocument, position: vscode.
         doc.uri
     );
 
-    if (!symbols) {
+    if (!symbols || symbols.length === 0) {
+        return null;
+    }
+
+    // some language servers return SymbolInformation[] instead of DocumentSymbol[];
+    // those have no range/children, and we can't build a symbol tree from them
+    const firstSymbol = symbols.find(symbol => !!symbol);
+    if (!firstSymbol || !('range' in firstSymbol)) {
         return null;
     }
 
@@ -42,8 +48,11 @@ export async function extractSymbols(doc: vscode.TextDocument, position: vscode.
 
 
 export async function parseArrivalFromEditorState(editor: vscode.TextEditor) {
+    if (editor.selections.length === 0) {
+        return;
+    }
+
     // only pick the first selection, if there are multiple selections, we treat first selection as the pivot
-    // const position = event.selections[0].anchor;
     const position = editor.selections[0].anchor;
 
     // when cursor on space or punctuations like '=', wordRange would be undefined
@@ -59,6 +68,8 @@ export async function parseArrivalFromEditorState(editor: vscode.TextEditor) {
     // get the symbol at the position
     const symbol = await extractSymbols(editor.document, position);
     if (!symbol) {
+        const location = `${vscode.workspace.asRelativePath(editor.document.uri)}:${position.line + 1}:${position.character + 1}`;
+        logInfo(`ignored arrival on '${word}' (${location}): the document symbol provider returned no symbol there — it may still be loading`);
         return;
     }
 
@@ -129,34 +140,4 @@ export function productIconPath(kind: vscode.SymbolKind): vscode.ThemeIcon {
         default:
             return new vscode.ThemeIcon('symbol-misc');
     }
-}
-
-
-/**
- * color conversion from hsv to rgb hex
- * @param h hue, 0-360
- * @param s saturation, 0-1
- * @param v value, 0-1
- * @param alpha alpha, 0-1
- * @returns hex string of rgb, like #ffffff
- */
-export function hsvToRgbaHex(h: number, s: number, v: number, alpha: number = 1): string {
-    assert(h >= 0 && h <= 360, 'hue must be between 0 and 360');
-    assert(s >= 0 && s <= 1, 'saturation must be between 0 and 1');
-    assert(v >= 0 && v <= 1, 'value must be between 0 and 1');
-    assert(alpha >= 0 && alpha <= 1, 'alpha must be between 0 and 1');
-
-    const c = v * s;
-    const x = c * (1 - Math.abs((h / 60) % 2 - 1));
-    const m = v - c;
-    const r = (h < 60) ? c : (h < 120) ? x : (h < 180) ? 0 : (h < 240) ? x : (h < 300) ? c : 0;
-    const g = (h < 60) ? x : (h < 120) ? c : (h < 180) ? x : (h < 240) ? 0 : (h < 300) ? x : c;
-    const b = (h < 60) ? 0 : (h < 120) ? x : (h < 180) ? c : (h < 240) ? x : (h < 300) ? 0 : c;
-
-    const redHex = Math.round(r + m).toString(16).padStart(2, '0');
-    const greenHex = Math.round(g + m).toString(16).padStart(2, '0');
-    const blueHex = Math.round(b + m).toString(16).padStart(2, '0');
-    const alphaHex = Math.round(alpha * 255).toString(16).padStart(2, '0');
-
-    return `#${redHex}${greenHex}${blueHex}${alphaHex}`;
 }

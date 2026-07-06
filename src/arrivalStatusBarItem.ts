@@ -23,15 +23,15 @@ export class ArrivalStatusBarItem {
     }
 
     refresh() {
-        const hottestArrival = this._arrivalCollection.allArrivals().reduce((hottest: Arrival, current: Arrival) => {
-            return current.selfEncoreCount >= hottest.selfEncoreCount ? current : hottest;
-        });
-
-        if (!hottestArrival || !this._isEnabled) {
+        if (!this._isEnabled || this._arrivalCollection.isEmpty) {
             this._statusBarItem.text = ``;
             this._statusBarItem.hide();
             return;
         }
+
+        const hottestArrival = this._arrivalCollection.allArrivals().reduce((hottest: Arrival, current: Arrival) => {
+            return current.selfEncoreCount >= hottest.selfEncoreCount ? current : hottest;
+        });
 
         this._statusBarItem.text = `$(ruby) ${hottestArrival.symbol.name}`;
         this._statusBarItem.command = {
@@ -48,7 +48,7 @@ export class ArrivalStatusBarItem {
         this._statusBarItem.show();
     }
 
-    dispose(context: vscode.ExtensionContext) {
+    registerTo(context: vscode.ExtensionContext) {
         context.subscriptions.push(this._statusBarItem);
     }
 }

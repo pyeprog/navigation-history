@@ -40,23 +40,45 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(vscode.window.registerFileDecorationProvider(arrivalDecorationProvider));
 
 	const arrivalStatusBarItem = new ArrivalStatusBarItem(arrivalCollection);
-	arrivalStatusBarItem.dispose(context);
+	arrivalStatusBarItem.registerTo(context);
+	if (!(config.get('showStatusBarItem') as boolean)) {
+		arrivalStatusBarItem.disable();
+	}
 
 	const viewUpdater = new ViewUpdater(treeView, arrivalRecorder, arrivalHistoryProvider, arrivalDecorationProvider, arrivalStatusBarItem);
 	context.subscriptions.push(viewUpdater.registerSelf());
 
+	// keep the recorded symbol ranges in sync when lines are inserted or removed
+	const documentChangeHandler = vscode.workspace.onDidChangeTextDocument((event) => {
+		if (arrivalCollection.applyDocumentChanges(event)) {
+			arrivalHistoryProvider.refresh();
+			arrivalDecorationProvider.refresh();
+		}
+	});
+	context.subscriptions.push(documentChangeHandler);
+
 	const configChangeHandler = registerConfigChangeHandler(arrivalHistoryProvider, arrivalDecorationProvider, arrivalStatusBarItem);
 	context.subscriptions.push(configChangeHandler);
+
+	const refreshAll = () => {
+		arrivalHistoryProvider.refresh();
+		arrivalDecorationProvider.refresh();
+		arrivalStatusBarItem.refresh();
+	};
+
 	const cleanupCommand = vscode.commands.registerCommand(
 		'navigationHistory.cleanup',
-		() => arrivalHistoryProvider.cleanup()
+		() => {
+			arrivalRecorder.clear();
+			refreshAll();
+		}
 	);
 	context.subscriptions.push(cleanupCommand);
 
 	const pinCommand = vscode.commands.registerCommand(
 		'navigationHistory.pin',
 		(arrival: Arrival) => {
-			arrivalCollection.setArrivalPinState(arrival.symbol.tracingUri, true);
+			arrival.isPinned = true;
 			arrivalHistoryProvider.refresh();
 		}
 	);
@@ -66,7 +88,7 @@ export function activate(context: vscode.ExtensionContext) {
 		'navigationHistory.delete',
 		(arrival: Arrival) => {
 			arrivalCollection.delete(arrival);
-			arrivalHistoryProvider.refresh();
+			refreshAll();
 		}
 	);
 	context.subscriptions.push(deleteCommand);
@@ -75,7 +97,7 @@ export function activate(context: vscode.ExtensionContext) {
 		'navigationHistory.deleteOtherTrees',
 		(arrival: Arrival) => {
 			arrivalCollection.deleteOtherTrees(arrival);
-			arrivalHistoryProvider.refresh();
+			refreshAll();
 		}
 	);
 	context.subscriptions.push(deleteOtherTreesCommand);
@@ -83,7 +105,7 @@ export function activate(context: vscode.ExtensionContext) {
 	const unpinCommand = vscode.commands.registerCommand(
 		'navigationHistory.unpin',
 		(arrival: Arrival) => {
-			arrivalCollection.setArrivalPinState(arrival.symbol.tracingUri, false);
+			arrival.isPinned = false;
 			arrivalHistoryProvider.refresh();
 		}
 	);

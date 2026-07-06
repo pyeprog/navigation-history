@@ -19,12 +19,6 @@ export class ArrivalHistoryProvider implements vscode.TreeDataProvider<TreeItemI
 		this._onDidChangeTreeData.fire();
 	}
 
-
-	cleanup() {
-		this.arrivalCollection.clear();
-		this.refresh();
-	}
-
 	getReprOptions(): TreeViewReprOptions {
 		return this.reprOptions;
 	}

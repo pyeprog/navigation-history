@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import * as path from 'path';
 import { TracableSymbol } from './tracableSymbol';
 import { debugLog } from './debug';
 import { productIconPath } from './util';
@@ -24,7 +25,6 @@ export class Delimiter implements TreeItemInterface {
     }
 }
 
-export type SortStrategy = 'latestFirst' | 'oldestFirst' | 'hottestFirst';
 export type SortOrder = 'ascending' | 'descending';
 export type SortField = 'time' | 'encore';
 export type SectionDelimiterReprOptions = {
@@ -160,13 +160,8 @@ export class Arrival implements ArrivalObjectInterface, TreeItemInterface {
         return this.symbol.isEqual(other.symbol);
     }
 
-    setParent(parent: Arrival): Arrival {
-        this.parent = parent;
-        return this;
-    }
-
     addChild(child: Arrival): Arrival {
-        if (this.children.find(child => child.isOnSameSymbolOf(this))) {
+        if (this.children.find(existingChild => existingChild.isOnSameSymbolOf(child))) {
             return this;
         }
 
@@ -177,7 +172,7 @@ export class Arrival implements ArrivalObjectInterface, TreeItemInterface {
     }
 
     removeChild(child: Arrival) {
-        this.children = this.children.filter(c => c.symbol.tracingUri.toString() !== child.symbol.tracingUri.toString());
+        this.children = this.children.filter(c => c !== child);
         child.parent = undefined;
     }
 
@@ -187,9 +182,8 @@ export class Arrival implements ArrivalObjectInterface, TreeItemInterface {
         const symbolDisplayName = (this.symbol.kind === vscode.SymbolKind.Method) ? `.${this.symbol.name}` : this.symbol.name;
         let treeItem = new vscode.TreeItem(symbolDisplayName, this.collapsibleState);
 
-        const workspacePath: string = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath ?? '';
-        const relativeFilePath: string = this.symbol.uri.fsPath.slice(workspacePath.length);
-        const filenameInDescription = this.representationOptions.showFilename ? relativeFilePath.split('/').pop() : '';
+        const relativeFilePath: string = vscode.workspace.asRelativePath(this.symbol.uri, false);
+        const filenameInDescription = this.representationOptions.showFilename ? path.basename(this.symbol.uri.fsPath) : '';
         const range = this.symbol.range;
         const lineNumInDescription = range.start.line + 1;
         const columnNumInDescription = range.start.character + 1;

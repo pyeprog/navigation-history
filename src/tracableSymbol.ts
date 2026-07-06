@@ -3,7 +3,6 @@ import * as vscode from 'vscode';
 
 
 export class TracableSymbol extends vscode.DocumentSymbol {
-    private static readonly TYPE_TOKEN = Symbol("TracableSymbol");
     uri: vscode.Uri;
     children: TracableSymbol[];
     parent: TracableSymbol | undefined | null;
@@ -17,13 +16,17 @@ export class TracableSymbol extends vscode.DocumentSymbol {
         this.children = children || [];
         this.parent = parent || null;
     }
-    
-    static empty(): TracableSymbol {
-        return new TracableSymbol(vscode.Uri.parse('delimiter'), 'delimiter', '', vscode.SymbolKind.File, new vscode.Range(0, 0, 0, 1), new vscode.Range(0, 0, 0, 1));
-    }
-    
+
     get tracingUri(): vscode.Uri {
-        return vscode.Uri.parse(`tracableSymbol://${this.uri.fsPath}/${this.name}/${this.range.start.line}-${this.range.start.character}-${this.range.end.line}-${this.range.end.character}`);
+        // each segment is encoded so that symbol names containing '/', '#', '?' and
+        // windows-style paths cannot break the uri structure or collide with each other
+        const segments = [
+            this.uri.fsPath,
+            this.name,
+            String(this.kind),
+            `${this.range.start.line}-${this.range.start.character}-${this.range.end.line}-${this.range.end.character}`,
+        ];
+        return vscode.Uri.from({ scheme: 'tracableSymbol', path: '/' + segments.map(encodeURIComponent).join('/') });
     }
         
     hasSameStartPosition(other: TracableSymbol): boolean {
@@ -50,8 +53,8 @@ export class TracableSymbol extends vscode.DocumentSymbol {
             && this.selectionRange.isEqual(other.selectionRange);
     }
     
-    static isTypeOf(obj?: any): boolean {
-        return obj?.TYPE_TOKEN === TracableSymbol.TYPE_TOKEN;
+    static isTypeOf(obj?: any): obj is TracableSymbol {
+        return obj instanceof TracableSymbol;
     }
 
     static createFrom(uri: vscode.Uri, symbol: vscode.DocumentSymbol | TracableSymbol, parent?: TracableSymbol): TracableSymbol {
