@@ -1,5 +1,34 @@
 # Navigation History 🧭
 
+<br>
+
+<p align="center">
+  <a href="https://marketplace.visualstudio.com/items?itemName=WaylongLeon.sightread">
+    <img src="https://raw.githubusercontent.com/pyeprog/sightRead/main/media/icon.png" width="110" alt="SightRead icon">
+  </a>
+</p>
+
+<h2 align="center">🚀 Meet <a href="https://marketplace.visualstudio.com/items?itemName=WaylongLeon.sightread">SightRead</a> — this extension, done right</h2>
+
+<p align="center">
+  <b>SightRead's <i>Trail</i> view is what Navigation History set out to be, rebuilt from scratch by the same author:</b><br>
+  your jumps to definitions and references become a precise call map — callers as parents, callees as children —<br>
+  with no noise entries and no performance drag. And it ships with a whole code-reading toolkit around it:<br>
+  spotlight, skeleton fold, highlighter markers, auto segmentation and entry points.
+</p>
+
+<p align="center">
+  <a href="https://marketplace.visualstudio.com/items?itemName=WaylongLeon.sightread"><img src="https://vsmarketplacebadges.dev/version/WaylongLeon.sightread.svg?label=VS%20Marketplace&color=007ACC" alt="VS Marketplace"></a>
+  <a href="https://marketplace.visualstudio.com/items?itemName=WaylongLeon.sightread"><img src="https://vsmarketplacebadges.dev/installs-short/WaylongLeon.sightread.svg" alt="Installs"></a>
+  <a href="https://open-vsx.org/extension/WaylongLeon/sightread"><img src="https://img.shields.io/open-vsx/v/WaylongLeon/sightread?label=Open%20VSX" alt="Open VSX"></a>
+</p>
+
+<h3 align="center">👉 <a href="https://marketplace.visualstudio.com/items?itemName=WaylongLeon.sightread">Install SightRead from the VS Code Marketplace</a> 👈</h3>
+
+<br>
+
+---
+
 ## Purpose 🎯
 
 A Visual Studio Code extension designed to enhance the experience of reading code by providing **a comprehensive history of code navigation** and **a tree structure of calling hierarchies**.
@@ -40,7 +69,7 @@ Thus, this extension is designed to help developers to:
 
 ### From VS Code Marketplace
 
-1. Open the Extensions view by clicking on the Extensions icon in the Activity Bar on the side of the window 
+1. Open the Extensions view by clicking on the Extensions icon in the Activity Bar on the side of the window
 2. Search for "Navigation History" in the search bar.
 3. Click on the "Install" button.
 4. Once installed, you can activate the extension by clicking on the "Enable" button.
