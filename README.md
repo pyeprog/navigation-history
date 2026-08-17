@@ -3,12 +3,12 @@
 <br>
 
 <p align="center">
-  <a href="https://marketplace.visualstudio.com/items?itemName=WaylongLeon.sightread">
+  <a href="https://open-vsx.org/extension/WaylongLeon/sightread">
     <img src="https://raw.githubusercontent.com/pyeprog/sightRead/main/media/icon.png" width="110" alt="SightRead icon">
   </a>
 </p>
 
-<h2 align="center">🚀 Meet <a href="https://marketplace.visualstudio.com/items?itemName=WaylongLeon.sightread">SightRead</a> — this extension, done right</h2>
+<h2 align="center">🚀 Meet <a href="https://open-vsx.org/extension/WaylongLeon/sightread">SightRead</a> — this extension, done right</h2>
 
 <p align="center">
   <b>SightRead's <i>Trail</i> view is what Navigation History set out to be, rebuilt from scratch by the same author:</b><br>
@@ -20,10 +20,13 @@
 <p align="center">
   <a href="https://marketplace.visualstudio.com/items?itemName=WaylongLeon.sightread"><img src="https://vsmarketplacebadges.dev/version/WaylongLeon.sightread.svg?label=VS%20Marketplace&color=007ACC" alt="VS Marketplace"></a>
   <a href="https://marketplace.visualstudio.com/items?itemName=WaylongLeon.sightread"><img src="https://vsmarketplacebadges.dev/installs-short/WaylongLeon.sightread.svg" alt="Installs"></a>
+  <a href="https://marketplace.visualstudio.com/items?itemName=WaylongLeon.sightread&ssr=false#review-details"><img src="https://vsmarketplacebadges.dev/rating-star/WaylongLeon.sightread.svg" alt="Rating"></a>
   <a href="https://open-vsx.org/extension/WaylongLeon/sightread"><img src="https://img.shields.io/open-vsx/v/WaylongLeon/sightread?label=Open%20VSX" alt="Open VSX"></a>
+  <a href="https://open-vsx.org/extension/WaylongLeon/sightread"><img src="https://img.shields.io/open-vsx/dt/WaylongLeon/sightread?label=downloads" alt="Open VSX Downloads"></a>
+  <a href="https://github.com/pyeprog/sightRead/blob/main/LICENSE"><img src="https://img.shields.io/github/license/pyeprog/sightRead" alt="License"></a>
 </p>
 
-<h3 align="center">👉 <a href="https://marketplace.visualstudio.com/items?itemName=WaylongLeon.sightread">Install SightRead from the VS Code Marketplace</a> 👈</h3>
+<h3 align="center">👉 <a href="https://open-vsx.org/extension/WaylongLeon/sightread">Install SightRead from Open VSX</a> 👈</h3>
 
 <br>
 
